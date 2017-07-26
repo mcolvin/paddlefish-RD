@@ -304,13 +304,14 @@ params<-c("omega","p","S","lambda","gammaPrime")
 ```{r}
 # THIS WILL ONLY RUN IF YOU HAVE JAGS INSTALLED 
 # AND THE R2jags PACKAGE
+library(R2jags)
 out <- jags(data=dat,
 	inits=inits,
 	parameters=params,	
 	model.file=mod_RD,
 	n.chains = 3,	
-	n.iter = 150000,	
-	n.burnin = 60000, 
+	n.iter = 1500,	
+	n.burnin = 600, 
 	n.thin=2,
 	working.directory=getwd())
 out  # OUTPUT
