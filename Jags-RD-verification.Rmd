@@ -1,12 +1,17 @@
 ---
 title: "Jags Robust Design Verification"
-author: "M.E. Colvin"
-date: "2017-07-26"
+author: M.E. Colvin
+date: 2017-07-26
 output:
   html_document
 bibliography: ref.bib
 csl: ecology.csl  
 ---
+
+<!--
+rmarkdown::render("Jags-RD-verification.Rmd",
+     output_dir = "./docs")
+-->
 
 This code simulates a population and capture histories that can be 
 estimated using a robust design. The code is overkill because it allows
@@ -21,7 +26,7 @@ The function takes a list of inputs:
 * Movement among secondary occasions
 * Recruitment
    
-```{r}
+```{r,eval=FALSE}
 sim_ch<-function(inputs,...)
     {library(rowr)
     ## SET UP TIME INTERRVALS
@@ -123,7 +128,7 @@ The function below contains the BUGS model used to
 estimate the demographic parameters and abundance. It was 
 modified from [@RN5251]
 
-```{r}
+```{r,eval=FALSE}
 mod_RD<- function()
 	{
         
@@ -203,7 +208,7 @@ mod_RD<- function()
     }
 ```
 
-```{r}
+```{r,eval=FALSE}
 input<-list()
 input$nprim = 10
 input$phi=rep(0.8,input$nprim-1)## SURVIVAL
@@ -220,7 +225,7 @@ inputs<-input
 ch<-sim_ch(inputs=input)
 ```
 
-```{r}
+```{r,eval=FALSE}
 library(RMark)
 rd<-process.data(data=ch$ch, 
     model="Robust", 
@@ -245,16 +250,16 @@ fit<-mark(data = rd,
 save(fit,file="_output/mark-fit.Rdata")
 cleanup(ask=FALSE)
 ```
-```{r,echo=FALSE}
+```{r,echo=FALSE,eval=FALSE}
 load("_output/mark-fit.Rdata")
 ```
-```{r}
+```{r,eval=FALSE}
 summary(fit)
 ```
 
 ## Estimating demographic rates using Jags
 
-```{r}
+```{r,eval=FALSE}
 T2 <- input$nsec # number of secondary periods per primary period
 T <- length(T2) # number of primary periods
 ch_array<-array(0,c(nrow(ch$ch_mat),max(T2),T))
@@ -281,7 +286,7 @@ dat<-list(
 
 
 	
-```{r}
+```{r,eval=FALSE}
 ## initial values
 ## set for each chain
 inits<- function()
@@ -295,13 +300,13 @@ inits<- function()
 
     
     
-```{r}
+```{r,eval=FALSE}
 ## WHAT PARAMETERS TO KEEP TRACK OF DURING ESTIMATION
 params<-c("omega","p","S","lambda","gammaPrime")
 ```
     
 	
-```{r}
+```{r,eval=FALSE}
 # THIS WILL ONLY RUN IF YOU HAVE JAGS INSTALLED 
 # AND THE R2jags PACKAGE
 library(R2jags)
@@ -319,3 +324,5 @@ sav(out,file="_output/bugs-rd-fit.Rdata")
 out$BUGSoutput$mean$N # ESTIMATED NUMBER OF FISH IN POOL
 traceplot(out)# LOOK AT TRACEPLOTS FOR CONVERGENCE.
 ```
+
+## References 
