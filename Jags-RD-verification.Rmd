@@ -310,11 +310,12 @@ out <- jags(data=dat,
 	parameters=params,	
 	model.file=mod_RD,
 	n.chains = 3,	
-	n.iter = 1500,	
-	n.burnin = 600, 
+	n.iter = 250000,	
+	n.burnin = 60000, 
 	n.thin=2,
 	working.directory=getwd())
 out  # OUTPUT
+sav(out,file="_output/bugs-rd-fit.Rdata")
 out$BUGSoutput$mean$N # ESTIMATED NUMBER OF FISH IN POOL
 traceplot(out)# LOOK AT TRACEPLOTS FOR CONVERGENCE.
 ```
