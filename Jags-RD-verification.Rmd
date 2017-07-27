@@ -108,7 +108,7 @@ sim_ch<-function(inputs,...)
     # prep data for processing
     ch1<- data.frame(ch=apply(ch,1,paste0,collapse=""),
         freq=1,stringsAsFactors=FALSE)
-    ch_array<- 
+
     out<-(list(ch=ch1,
         ch_mat=ch,
         occs=occs,

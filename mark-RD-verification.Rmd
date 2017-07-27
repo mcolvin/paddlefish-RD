@@ -1,0 +1,452 @@
+---
+title: "Jags Robust Design Verification"
+author: M.E. Colvin
+date: 2017-07-26
+output:
+  html_document
+bibliography: ref.bib
+csl: ecology.csl  
+---
+
+<!--
+rmarkdown::render("Jags-RD-verification.Rmd",
+     output_dir = "./docs")
+-->
+
+
+```{r}
+sim_rd<- function(input,...)
+	{
+	Z<- matrix(0,input$n,input$nprim)
+	Z_observable<- matrix(0,input$n,input$nprim)
+	Z_unobservable<- matrix(0,input$n,input$nprim)
+	Z[,1]<-1
+	Z_observable[,1]<-rbinom(input$n,1,input$gammaPrimePrime)
+	Z_unobservable[,1]<-1-Z_observable[,1]
+
+	# SURVIVAL,, EMIGRATION, AND MIGRATION
+	for(i in 1:input$n) # FOR EACH INDIVIDUAL IN THE SUPER POPULATION
+		{
+		for(j in 2:input$nprim) # FOR PRIMARY OCCASIONS 2:NPRIM
+			{
+			# DOES A FISH SURVIVE, IF IT WAS PREVIOUSLY ALIVE?
+			Z[i,j]<- rbinom(1,1,input$phi[j-1]*Z[i,j-1])
+            # RANDOM TEMPORARY EMIGRATION
+            Z_observable[i,j]<- rbinom(1,1,input$gammaPrimePrime[j-1])*Z[i,j]
+            Z_unobservable[i,j]<- (1-Z_observable[i,j])*Z[i,j]
+            }
+		}
+		
+	# SIMULATE CAPTURE HISTORY
+	## MORE THAN 1 CAPTURE OCCASIONS
+	ch<- matrix(0,nrow(Z),sum(inputs$nsec))
+    primsec<- rep(c(1:inputs$nprim),inputs$nsec)
+    p<- rep(input$p,inputs$nsec)
+    for(ind in 1:nrow(Z_unobservable))
+        {
+        for(i in 1:length(p))
+            {
+            ch[ind,i]<-rbinom(1,1,p[i])*Z_observable[ind,primsec[i]]
+            }
+        }
+	## ADD ACOUSTIC TAGS
+	## FISH MARKED THAT DATA ARE NOT INCLUDED IN ACOUSTIC CAPTURE HISTORY	
+	first_capture<-unlist(lapply(1:nrow(ch),function(x) 
+        {
+        if(sum(ch[x,])>0){primsec[min(which(unlist(ch[x,])==1))]}else{0}
+        }))
+	fish_data<- data.frame(first_capture=first_capture,
+        acoustic=ifelse(first_capture>0,1,0))
+	fish_data$tagged<-0
+    for(i in 1:input$nprim)
+        {
+        nleft<-input$tags-sum(fish_data$tagged)
+        indx<-which(fish_data$first_capture==i)
+        nToTag<-min(input$maxTags,nleft,length(indx))
+        indx<- sample(indx,nToTag,replace=FALSE)
+        fish_data[indx,]$tagged<-1
+        }
+    ## MAKE CAPTURE MATRIX FOR ACOUSTIC FISH
+    ## ACCOUNTS FOR FISH THAT LEFT
+    
+    # SLIDE IN ACOUSTIC DATA
+    app<- matrix(0,nrow(Z),input$nprim)
+    indx<-which(fish_data$first_capture!=0)
+    for(i in indx)
+        {
+        srt<-fish_data$first_capture[i]
+        if(srt<input$nprim){app[i,c((srt+1):input$nprim)]<- 1}
+        }    
+    ## CORRECT FOR FISH THAT ARE IN THE STUDY AREA
+    app<- app*Z_observable    
+        
+    ch_acoustic<-matrix(NA,nrow=nrow(Z),ncol=1)
+    linker<- data.frame(prim=rep(c(1:input$nprim),input$nsec),
+        sec_indx=c(1:sum(input$nsec)))
+    for(i in 1:input$nprim)
+        {
+        ch_acoustic<- cbind(ch_acoustic,app[,i])
+        for(j in linker[linker$prim==i,2])
+            {
+            ch_acoustic<- cbind(ch_acoustic,ch[,j])
+            }
+        }
+    ch_acoustic<-ch_acoustic[,-1]
+    
+    ## SUBSET OUT FISH THAT ARE NEVER CAPTURED
+	indx<- which(fish_data$first_capture>0)
+	ch<- ch[indx,]
+	ch_acoustic<- ch_acoustic[indx,]
+	fish_data<-as.data.frame(fish_data[indx,])
+	
+    ## NEED THIS FOR RMARK
+	out<-list()
+	ends<-cumsum(input$nsec) # last sampling occasion
+	
+    ## OCCASIONS FOR NON-TRANSMITTERED
+    occs<- rep(0,sum(input$nsec))
+	occs[ends]<-1# last occasion in primary
+    out$occs<- occs[-length(occs)]# drop last 1 for processing    
+	
+    ## OCCASIONS FOR TRANSMITTERED
+    occs<- rep(0,sum(input$nsec+1))
+    ends<-cumsum(input$nsec+1) # last sampling occasion
+	occs[ends]<-1# last occasion in primary
+    out$occs_ac<- occs[-length(occs)]# drop last 1 for processing    
+	    
+    ## CAPTURE HISTORIES WITH NO ACOUSTIC INFORMATION
+	out$ch<- data.frame(ch=apply(ch,1,paste0,collapse=""),
+		freq=1,
+		acoustic=as.factor(fish_data$tagged),
+		first_capture=as.factor(fish_data$first_capture*fish_data$tagged),
+		stringsAsFactors=FALSE)
+ 	out$ch_ac<- data.frame(ch=apply(ch_acoustic,1,paste0,collapse=""),
+		freq=1,
+		acoustic=as.factor(fish_data$tagged),
+		first_capture=as.factor(fish_data$first_capture*fish_data$tagged),
+		stringsAsFactors=FALSE)   
+    out$trueN<- colSums(Z_observable)
+    out$ch_mat<-ch
+    return(out)
+	}
+	
+
+inputs<-list(nprim=5)
+inputs$nsec=rep(4,inputs$nprim)
+inputs$phi=rep(0.8,inputs$nprim-1)
+inputs$n_acoustic_tags=50
+inputs$p=rep(0.6,inputs$nprim)# CAPTURE PROBABILITY
+inputs$gammaPrimePrime=rep(0.2, inputs$nprim-1) 
+inputs$n=200# super population size
+inputs$maxTags=5
+inputs$tags=50
+input<-inputs
+out<-sim_rd(inputs)
+library(RMark)
+rd<- process.data(data=out$ch[,-c(3,4)], 
+    #groups="acoustic",
+    model="Robust", 
+    time.intervals=out$occs) 
+S=list(formula=~1)# SURVIVAL
+## SHARE = TRUE TO SET C = P
+p=list(formula=~1,share=TRUE)
+f0<- list(formula=~time:acoustic)
+GammaDoublePrime=list(formula=~1,share=TRUE)
+fit<-mark(data = rd,
+    model = "Robust", 
+    time.intervals=time.intervals,
+    model.parameters=list(
+        S=S,
+        GammaDoublePrime=GammaDoublePrime,
+        p=p),
+    threads=2,
+    brief=FALSE,output=FALSE,invisible=TRUE)
+N<- fit$results$derived$`N Population Size`
+matplot(cbind(N$estimate,out$trueN))
+
+
+
+
+#######################################################################
+# try to allow p to vary and fix first to 0.3
+#######################################################################
+rd<- process.data(data=out$ch, 
+    groups=c("first_capture"),
+    model="Robust", 
+    time.intervals=out$occs) 
+rd_ddl<-make.design.data(rd)
+     
+        
+rd_ddl$p$pbin<- 0
+rd_ddl$p[which(rd_ddl$p$time==1),]$pbin<- 1
+rd_ddl$p$pbin<- as.factor(rd_ddl$p$pbin)
+rd_ddl$c$pbin<- factor(0,levels=c(0,1))
+
+p=list(formula=~pbin:acoustic,share=TRUE,
+    fixed= list(
+        index =which(rd_ddl$p$time==1 & rd_ddl$p$acoustic==1), 
+        value=  0.6))
+fit<-mark(data = rd,
+    ddl=rd_ddl,
+    model = "Robust", 
+    time.intervals=time.intervals,
+    model.parameters=list(
+        S=S,
+        GammaDoublePrime=GammaDoublePrime,
+        p=p),
+    threads=2,
+    brief=FALSE,output=FALSE,invisible=TRUE)
+N<- fit$results$derived$`N Population Size`
+# by adding a group it give separate estimates for f0
+matplot(cbind(N$estimate[1:5]+N$estimate[6:10],out$trueN))
+summary(fit,show.fixed=TRUE)$reals$p
+summary(fit)$beta
+
+
+
+
+
+
+#######################################################################
+# fix detection to 1 for acoustic  | acoustically tagged
+# fix detection to p(.) for all other
+#######################################################################
+inputs<-list(nprim=5)
+inputs$nsec=rep(4,inputs$nprim)
+inputs$phi=rep(0.8,inputs$nprim-1)
+inputs$n_acoustic_tags=50
+inputs$p=rep(0.6,inputs$nprim)# CAPTURE PROBABILITY
+inputs$gammaPrimePrime=rep(0.2, inputs$nprim-1) 
+inputs$n=400# super population size
+inputs$maxTags=5
+inputs$tags=50
+input<-inputs
+out<-sim_rd(inputs)
+
+## first fit with out acoustic information
+rd<- process.data(data=out$ch[,-c(3,4)], 
+    #groups="acoustic",
+    model="Robust", 
+    time.intervals=out$occs) 
+S=list(formula=~1)# SURVIVAL
+## SHARE = TRUE TO SET C = P
+p=list(formula=~1,share=TRUE)
+f0<- list(formula=~time:acoustic)
+GammaDoublePrime=list(formula=~1,share=TRUE)
+fit<-mark(data = rd,
+    model = "Robust", 
+    time.intervals=time.intervals,
+    model.parameters=list(
+        S=S,
+        GammaDoublePrime=GammaDoublePrime,
+        p=p),
+    threads=2,
+    brief=FALSE,output=FALSE,invisible=TRUE)
+N<- fit$results$derived$`N Population Size`
+matplot(cbind(NN,out$trueN))
+ff<-summary(fit,show.fixed=TRUE)$reals$p
+SS<-summary(fit,show.fixed=TRUE)$reals$S
+gdp<-summary(fit,show.fixed=TRUE)$reals$GammaDoublePrime
+
+    
+## NOW USE THE ACOUSTIC DATA
+rd<- process.data(data=out$ch_ac, 
+    groups=c("first_capture"),# 
+    model="Robust", 
+    time.intervals=out$occs_ac) 
+rd_ddl<-make.design.data(rd)
+
+# PLACES TO SET TO 1
+## ACOUSTICALLY TAGGED FISH IN SESSION 1
+indx1<-c(which(rd_ddl$p$first_capture==1 & rd_ddl$p$session %in% c(2:5) & rd_ddl$p$time==1),
+    which(rd_ddl$p$first_capture==2 & rd_ddl$p$session %in% c(3:5) & rd_ddl$p$time==1),
+    which(rd_ddl$p$first_capture==3 & rd_ddl$p$session %in% c(4:5) & rd_ddl$p$time==1),
+    which(rd_ddl$p$first_capture==4 & rd_ddl$p$session %in% c(5:5) & rd_ddl$p$time==1))
+
+indx0<-c(
+    which(rd_ddl$p$first_capture==1 & rd_ddl$p$session %in% c(1:1) & rd_ddl$p$time==1),# no prob of detection as not tagged acoustically
+    which(rd_ddl$p$first_capture==2 & rd_ddl$p$session %in% c(1:2) & rd_ddl$p$time==1),# no prob of detection as not tagged acoustically
+    which(rd_ddl$p$first_capture==3 & rd_ddl$p$session %in% c(1:3) & rd_ddl$p$time==1),# no prob of detection as not tagged acoustically
+    which(rd_ddl$p$first_capture==4 & rd_ddl$p$session %in% c(1:4) & rd_ddl$p$time==1),# no prob of detection as not tagged acoustically
+    which(rd_ddl$p$first_capture==5 & rd_ddl$p$session %in% c(1:5) & rd_ddl$p$time==1),# no prob of detection as not tagged acoustically
+    which(rd_ddl$p$time==1 & rd_ddl$p$first_capture==0))# no prob of detection as not tagged acoustically
+rd_ddl$p$pbin<-0
+rd_ddl$c$pbin<-0
+rd_ddl$p$pbin[which(rd_ddl$p$time==1)]<-1
+
+## SET VALUES TO BE CLOSE TO 1 OR 0 AS IT MESSES UP 
+## THE ESTIMATES OF S AND GAMMA PRIME
+p=list(formula=~pbin:first_capture,share=TRUE,
+    fixed= list(
+        index =c(indx1,indx0), 
+        value= c(rep(0.999,length(indx1)),rep(0.001,length(indx0)))))
+S=list(formula=~1)# SURVIVAL
+GammaDoublePrime=list(formula=~1,share=TRUE)#,
+    #fixed=0) # set to 0 to get apparent survival phi*gammaDblPrime
+fit_ac<-mark(data = rd,
+    ddl=rd_ddl,
+    model = "Robust", 
+    time.intervals=time.intervals,
+    model.parameters=list(
+        S=S,
+        GammaDoublePrime=GammaDoublePrime,
+        p=p),
+    threads=2,
+    brief=FALSE,output=FALSE,invisible=TRUE)
+N_ac<- fit_ac$results$derived$`N Population Size`
+NN_ac<- rowSums(matrix(N_ac$estimate,nrow=5,byrow=FALSE))
+# by adding a group it give separate estimates for f0
+matplot(cbind(NN_ac,out$trueN))
+ff_ac<-summary(fit_ac,show.fixed=TRUE)$reals$p
+SS_ac<-summary(fit_ac,show.fixed=TRUE)$reals$S
+gdp_ac<-summary(fit_ac,show.fixed=TRUE)$reals$GammaDoublePrime
+
+vals<-do.call("rbind.data.frame",ff_ac)
+
+summary(fit)
+
+
+
+
+
+
+
+
+
+rd.inp=convert.inp("http://www.montana.edu/rotella/documents/502/rd_simple1.inp")
+time.intervals=c(0,0,1,0,0,1,0,0,1,0,0,1,0,0)
+rd=process.data(data=rd.inp, model="Robust", time.intervals=time.intervals)
+rd_ddl<-make.design.data(rd,parameters=
+        list(GammaDoublePrime=list(time.bins=c(1,2,3,5)),
+             GammaPrime=list(time.bins=c(2,3,5))))
+
+GammaDoublePrime.random=list(formula=~time,share=TRUE)
+S.time=list(formula=~time)
+p.session=list(formula=~session,share=TRUE)
+mod.random=mark(data=rd, design.parameters=
+        list(GammaDoublePrime=list(time.bins=c(1,2,3,5)),
+             GammaPrime=list(time.bins=c(2,3,5))),
+        right=FALSE, 
+        model.parameters=list(S=S.time,
+                              p=p.session,
+                              GammaDoublePrime=GammaDoublePrime.random))
+
+
+
+
+
+
+p_fixed1_indx<- c()
+for(i in 1:max(as.numeric(as.character(rd_acoustic_ddl$p$group))))
+    {
+    p_fixed1_indx<- c(p_fixed1_indx,
+        which(rd_acoustic_ddl$p$group==i &  
+            #rd_acoustic_ddl$p$session %in% c((i+1):nprim) &
+            rd_acoustic_ddl$p$session %in% c((i+1):nprim) &
+            rd_acoustic_ddl$p$time==1))
+    }
+
+p_fixed0_indx<- c(which(rd_acoustic_ddl$p$group==0 & 
+        rd_acoustic_ddl$p$time==1))
+for(i in 2:max(as.numeric(as.character(rd_acoustic_ddl$p$group))))
+    {
+    p_fixed0_indx<- c(p_fixed0_indx,
+        which(rd_acoustic_ddl$p$group==i &  
+            rd_acoustic_ddl$p$session %in% c(1:(i-1)) &
+            rd_acoustic_ddl$p$time==1))
+
+    }
+
+rd_acoustic_ddl$p$verify<-NA
+rd_acoustic_ddl$p$verify[p_fixed1_indx]<-1
+rd_acoustic_ddl$p$verify[p_fixed0_indx]<-0
+
+p=list(formula=~1,share=TRUE,
+    fixed= list(
+        index = c(p_fixed1_indx, p_fixed0_indx), 
+        value=  c(rep(1,length(p_fixed1_indx)),
+            rep(0, length(p_fixed0_indx))
+        ))) # FIX P TO 1 FOR ACOUSTIC FISH AND 0 FOR PIT TAGS)# CAPTURE PROBABILITY
+
+f0<- list(formula=~acoustic+session)
+GammaDoublePrime=list(formula=~1)
+GammaPrime=list(formula=~1)
+fit_acoustic<-mark(data = rd_acoustic,
+    dll=rd_acoustic_ddl,
+    model = "Robust", 
+    time.intervals=time.intervals,
+    model.parameters=list(
+        S=S,
+        GammaDoublePrime=GammaDoublePrime,
+        GammaPrime=GammaPrime,
+        p=p,
+        f0=f0),
+    threads=2,
+    brief=FALSE,output=FALSE,invisible=TRUE)
+derived_acoustic<- fit_acoustic$results$derived$`N Population Size`
+
+
+p=list(formula=~1,share=TRUE)
+fit_pit<-mark(data = rd_pit,
+    dll = rd_pit_ddl,
+    model = "Robust", 
+    time.intervals=time.intervals,
+    model.parameters=list(
+        S=S,
+        GammaDoublePrime=GammaDoublePrime,
+        GammaPrime=GammaPrime,
+        p=p),
+    threads=2,
+    brief=FALSE,output=FALSE,invisible=TRUE)
+derived_pit<- fit_pit$results$derived$`N Population Size`
+
+
+
+
+estimates<- matrix(derived_acoustic$estimate,
+    nrow=nprim,
+    ncol=length(as.numeric(unique(as.character(rd_acoustic_ddl$p$acoustic)))),byrow=FALSE)
+lcl<- matrix(derived_acoustic$lcl,
+    nrow=nprim,
+    ncol=length(as.numeric(unique(as.character(rd_acoustic_ddl$p$acoustic)))),byrow=FALSE)
+    
+ucl<- matrix(derived_acoustic$ucl,
+    nrow=nprim,
+    ncol=length(as.numeric(unique(as.character(rd_acoustic_ddl$p$acoustic)))),byrow=FALSE)
+
+lcl<- lcl[,1]+rowSums(estimates[,2:ncol(estimates)])
+ucl<- ucl[,1]+rowSums(estimates[,2:ncol(estimates)])
+estimates<- rowSums(estimates)
+
+	# SAVE OUTPUT
+	ppp$vals<-rbind(ppp$vals,data.frame(
+		rep=ii,
+		parm=c("phi","gamma_dblprime","gamma_prime","p"),
+		acoustic=plogis(summary(fit_acoustic)$beta$estimate[1:4]),
+		pit=plogis(summary(fit_pit)$beta$estimate[1:4]),
+		true=c(out$parameters$phi[1],out$parameters$gamma_dblprime[1],
+			out$parameters$gamma_prime[1],out$parameters$p_cap[1]),
+			 bias_acoustic=NA, bias_pit=NA))
+	ppp$abundance<- rbind(ppp$abundance,
+		data.frame(rep=ii,
+		occasion=c(1:length(estimates)),
+		"pit"=derived_pit$estimate,
+		"acoustic"=estimates,
+		"true"=out$parameters$true_abundance,
+		"pit_se"=derived_pit$se,
+		"acoustic_se"=derived_acoustic$se[1:out$parameters$nprim],
+		acoustic_cv=NA,pit_cv=NA))
+	}
+
+saveRDS(ppp,"sim-output2.RDS")
+cleanup(ask=FALSE)
+
+
+
+
+
+
+
+
+
+```
