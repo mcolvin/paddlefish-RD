@@ -1,15 +1,21 @@
 figures<- function(n){
-
+unique(xx$id)
 if(n==1)
     {
-    poolReciever_ours<-subset(poolReciever, !(is.na(ID )))
-    xx<- dcast(poolReciever_ours, ID+date~"detect", value.var="ID",length)
-    plot(ID~date,xx,type='n',pch=20,cex=0.9,yaxt='n',ylab="",xlab="")
-    axis(2, at=c(1:50),labels=substr(tags$transmitter,10,14),las=1,cex.axis=0.7)
-    ids<- unique(xx$ID)
+    xx<- dcast(poolReciever_all, 
+        transmitter+date~"detect", 
+        value.var="transmitter",length)
+    xx<- merge(xx,tags,by="transmitter",all.x=TRUE)
+    xx<-xx[order(xx$transmitter,xx$date),]
+    plot(tagNumber~date,xx,type='n',pch=20,cex=0.9,
+        yaxt='n',ylab="",xlab="")
+    ids<- unique(xx$tagNumber)        
+    axis(2, at=c(1:49),labels=tags$ids,
+        las=1,cex.axis=0.7)
     for(i in 1:length(ids))
         {
-        points(ID~date, xx, subset=ID==ids[i],col=i,type='b',pch=20,cex=0.9,lwd=1.25)
+        points(tagNumber~date, xx, subset=tagNumber==ids[i],
+            col=i,type='b',pch=20,cex=0.9,lwd=1.25)
         }
     }
 if(n==2)
