@@ -185,8 +185,6 @@ xxx<- merge(xx, ggg,
     by=c("year","doy","set"),
     all=TRUE)# FILLS EMPTY NETS
 
-head(xxx[which(xxx$year==2017 & xxx$doy==138 & xxx$set==0),])
-
 xxx$tmp<- ifelse(xxx$tmp==1,1,0)
 xxx$occ_id<- factor(paste(xxx$year,xxx$doy,xxx$set,sep="_"),
     levels=all_occasions)
@@ -195,15 +193,12 @@ xxx$occ_id<- factor(paste(xxx$year,xxx$doy,xxx$set,sep="_"),
 xxx<- xxx[!(is.na(xxx$occ_id)),]
 xxx<- xxx[!(is.na(xxx$tmp)),]
 
-# missing data? 2017_171_0
-
 ch<- dcast(xxx, pit~occ_id,
     value.var='tmp',
     drop=FALSE,
     fun=sum)
 ch[is.na(ch)]<-0
 pit<-ch[,1]
-ch<-ch[,-1]
 ch[ch>0]<-1
 
 ## FISH LEVEL COVARIATES
@@ -215,7 +210,7 @@ ch<- ch[order(pit),]
 fish<- fish[order(fish$pit),]
 ch_raw<-ch
 # BUNLDLE THIS UP 
-ch<- data.frame(ch=apply(ch,1,paste,collapse=""),
+ch_dat<- data.frame(ch=apply(ch[,-1],1,paste,collapse=""),
     freq=1,
     first_captured=fish$id,
     stringsAsFactors=FALSE)
@@ -228,9 +223,31 @@ for(i in 1:length(occ_indx))
     {
     ncap<-c(ncap, sum(apply(ch_raw[,occ_strt[i]:occ_indx[i]],1,max)))
     }
-    
- 
-   
+
+#######################################################################
+## only do last occasion
+#######################################################################
+ch_last<-ch
+acoustics<-grep("_0",names(ch))
+ch_last<- ch[,-acoustics[-length(acoustics)]]
+indx<-which(rowSums(ch_last[,-1])>0)
+fish_dat<- fish[indx,]
+ch_last<-ch_last[indx,]
+# BUNLDLE THIS UP 
+ch_last_dat<- data.frame(ch=apply(ch_last[,-1],1,paste,collapse=""),
+    freq=1,
+    acoustic=ifelse(fish$id>0,1,0),
+    stringsAsFactors=FALSE)
+
+occ_last<- rep(0,ncol(ch_last)-1)
+xx<-sapply(names(ch_last),function(x) unlist(strsplit(x,"_"))[3])
+occ_strt<-which(xx==1)-1
+occ_strt<-occ_strt-1
+
+occ_indx<- occ_strt[occ_strt>0]
+occ_last[occ_indx]<-1
+occ_last<-occ_last[-length(occ_last)]
+
 odbcClose(comm)
 
 
@@ -264,34 +281,58 @@ ch<- dcast(xxx, pit~occ_id,
 ch[is.na(ch)]<-0
 pit<-ch[,1]
 ch<-ch[,-1]
-ch[ch>0]<-1    
+ch[ch>0]<-1
+
+
+#######################################################################
+## ACOUSTIC DATASET
+#######################################################################
+
+ch_acoustic<- ch[,grep("_0",names(ch))]
+receiverOn<-rep(1,ncol(ch_acoustic))
+receiverOn[c(1,2,3,8,9,17,18)]<- 0
+
+## FISH LEVEL COVARIATES
+fish<- data.frame(pit=pit)
+fish<- merge(fish,tags,by='pit',all.x=TRUE)
+fish$id<- ifelse(is.na(fish$id),0,fish$id)
+## MAKE SURE EVERYBODY MATCHES UP
+ch_acoustic<- ch_acoustic[order(pit),]
+fish_acoustic<- fish[order(fish$pit),]
+## DROP PIT TAGGED FISH
+indx<-which(rowSums(ch_acoustic)>0)
+ch_acoustic<- ch_acoustic[indx,]
+fish_acoustic<- fish_acoustic[indx,]
+
+#######################################################################
+## PIT TAGGED DATASET
+#######################################################################
+
 ch<- ch[,-grep("_0",names(ch))]    
-
-fish<-data.frame(id=c(1:nrow(ch)),
-    pit=c(pit,rep(0,N-M)))
-
 N<- round(nrow(ch)*2.5,0)
 M<- nrow(ch)
+
+
 # DATA AUGMENTATION
 ch<- rbind(as.matrix(ch),
     matrix(0,N-M,ncol(ch)))
-    
-# KNOWN STATES
-poolReciever<-merge(poolReciever,
-    occasions,by=c("year","doy"),all.x=TRUE)
-dcast(poolReciever,
-   pit~pocc,value.var="pit",
-   length)
+fish<-data.frame(id=c(1:nrow(ch)),
+    pit=c(pit,rep(0,N-M)))   
 
 
 
- 
 dat<-list(
     N=N,
     pocc=as.matrix(occasions),
     socc=as.matrix(socc),
     fish=as.matrix(fish),
-    ch=as.matrix(ch))
+    ch=as.matrix(ch),
+    
+    ch_acoustic=as.matrix(ch_acoustic),
+    ch_acoustic=as.matrix(ch_acoustic),
+    receiverOn=receiverOn
+    #fish_acoustic=fish_acoustic[1,2]
+    )
     
     
     

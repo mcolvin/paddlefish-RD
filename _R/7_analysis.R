@@ -1,11 +1,64 @@
 #######################################################################
 # NOTES
 #######################################################################
+rd<- process.data(data=ch_last_dat, 
+    groups=c("acoustic"),# 
+    model="Robust", 
+    time.intervals=occ_last) 
+rd_ddl<-make.design.data(rd)
+
+
+rd_ddl$p$reciever<- 0
+rd_ddl$p$reciever[which(rd_ddl$p$session==40&rd_ddl$p$Time==0)]<- 1
+rd_ddl$c$reciever<- 0
+rd_ddl$c$reciever[which(rd_ddl$c$session==40&rd_ddl$p$Time==0)]<- 1
+rd_ddl$p$reciever<-as.factor(rd_ddl$p$reciever)
+rd_ddl$c$reciever<-as.factor(rd_ddl$c$reciever)
+
+
+indx1<-which(rd_ddl$p$session==40&rd_ddl$p$Time==0&rd_ddl$p$acoustic==1)
+indx0<-which(rd_ddl$p$session==40&rd_ddl$p$Time==0&rd_ddl$p$acoustic==0)
+indxs<-c(indx0,indx1)
+vals<-c(rep(0.001,length(indx0)),rep(0.99,length(indx1)))
+
+p=list(formula=~acoustic:reciever,
+    share=TRUE,
+    fixed=list(
+        indx=indxs,
+        value=vals))
+S=list(formula=~1)# SURVIVAL
+GammaDoublePrime=list(formula=~1,
+    share=TRUE)
+
+fit_ac<-mark(data = rd,
+    ddl=rd_ddl,
+    model = "Robust", 
+    time.intervals=occ_last,
+    model.parameters=list(
+        S=S,
+        GammaDoublePrime=GammaDoublePrime,
+        p=p),
+    threads=2,
+    brief=FALSE,output=FALSE,invisible=FALSE)
+N_ac<- fit_ac$results$derived$`N Population Size`
+NN_ac<- (matrix(N_ac$estimate,nrow=40,byrow=FALSE))
+NN_ac<- rowSums(NN_ac)
+# by adding a group it give separate estimates for f0
+plot(NN_ac~primary_occasions$year_f,
+    ylim=c(0,150),type='b',
+    xaxt='n')
+
+
+
+
+
+
+
 ## THE VR2 WAS IN THE POOL FOR GOOD 2016 DOY  189
 
 
 
-rd<- process.data(data=ch, 
+rd<- process.data(data=ch_dat, 
     groups=c("first_captured"),# 
     model="Robust", 
     time.intervals=occ) 
