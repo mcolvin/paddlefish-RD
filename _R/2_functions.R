@@ -2,79 +2,125 @@ mod_RD<- function()
 	{
         
 	###################################################################	
-	# PRIORS
+	#
+    # PRIORS
+    #
     ###################################################################
-    lo_omega~dnorm(0,0.37)# INCLUSION PROBABILITY (LOG ODDS)
-    lo_gamma~dnorm(0,0.37)# PROBABLITY OF MOVING  (LOG ODDS)
-    lo_phi~dnorm(0,0.37) # log odds phi
-    lo_p~dnorm(0,0.37) # log odds p
+    lo_omega~dnorm(0,0.37)  # INCLUSION PROBABILITY (LOG ODDS)
+    lo_gamma~dnorm(0,0.37)  # PROBABLITY OF MOVING  (LOG ODDS)
+    lo_phi~dnorm(0,0.37)    # log odds phi (SURVIVAL)
+    lo_p~dnorm(0,0.37)      # log odds p (CAPTURE PROBABILITIES)
+    
+    ## TRANSFORM TO PROBABILITIES
+    for(primary in 1:P) 
+        {# primary occasions       
+        logit(omega[primary])<- lo_omega
+        logit(S[primary])<- lo_phi
         
-    for(d in 1:10)
-        {        
-        logit(omega[d])<- lo_omega
-        logit(S[d])<- lo_phi
-        logit(gammaPrime[d])<- lo_gamma
-        logit(gammaPrimePrime[d])<- lo_gamma
-        logit(p[d])<-lo_p
-        lambda[d] <- (1-gammaPrime[d])/(gammaPrimePrime[d]-gammaPrime[d]+1) 
-        }
+        ## ASSUME RANDOM TE
+        logit(gammaPrime[primary])<- lo_gamma
+        logit(gammaPrimePrime[primary])<- lo_gamma
+        logit(p[primary])<-lo_p
+        lambda[primary] <- (1-gammaPrime[primary])/
+            (gammaPrimePrime[primary]-gammaPrime[primary]+1) 
+        }#primary
 
-    for(k in 1:10)
-        {
-        #alive_i[i,t_] <- step(z[i,t_]-3) # check alive or not
-        #Nin_i[i,t_] <- equals(z[i,t_],4) # count if i is within study area
         
+        
+    ###################################################################
+    #
+    # TRANSITION MATRICES FOR EACH PRIMARY OCCASION K  
+    # 1 = not yet in population
+    # 2 = dead
+    # 3 = offsite
+    # 4 = onsite (only observable state)
+    # transition are from the column --> rows
+    ###################################################################    
+    for(k in 1:P)
+        {
+        # alive_i[i,t_] <- step(z[i,t_]-3) # check alive or not
+        # Nin_i[i,t_] <- equals(z[i,t_],4) # count if i is within study area
         # recruitment process from 'eigenvector decomposition'
         # recruitment ratio, or long-term prob of being inside     
 
         
-        # TRANSITION MATRIX
-        # 1 =not yet in population;2=dead;3=offsite;4=onsite (only observable state)
-        # transition are from the column --> rows
-
-        tmat[1,1,k]<- 1-omega[k] # not in population yet
+        # RECRUITS NOT IN POPULATION YET
+        ## NOT RECRUITED INTO THE POPULATION YET
+        tmat[1,1,k]<- 1-omega[k] 
+        ## RECRUITS -> DEAD
         tmat[2,1,k]<- 0
+        ## RECRUITED TO OFFSITE POPULATION
         tmat[3,1,k]<- omega[k]*lambda[k]
+        ## RECRUITED TO ONSITE POPULATION
         tmat[4,1,k]<- omega[k]*(1-lambda[k])
+
         
         # DEAD
+        ## RECRUITS -> DEAD
         tmat[1,2,k]<-0
-        tmat[2,2,k]<-1 # STAY DEAD
+        ## DEAD -> DEAD
+        tmat[2,2,k]<-1          
+        ## LIVE & OFFSITE -> DEAD & AND OFFSITE
         tmat[3,2,k]<-0
+        ## LIVE & ONSITE -> DEAD & ONSITE
         tmat[4,2,k]<-0
+        
+        
         # OFFSITE
+        ## DEAD & OFFISTE -> ALIVE & OFFSITE
         tmat[1,3,k]<-0
-        tmat[2,3,k]<-1-S[k] # DIES 
-        tmat[3,3,k]<-0.7#gammaPrime[k]*omega[k] # outside -> outside
-        tmat[4,3,k]<-0.7#(1-gammaPrime[k])*omega[k] # outside -> inside
-        # ONSITE
+        ## LIVE & OFFSITE -> DEAD & OFFSITE
+        tmat[2,3,k]<-1-S[k]     # DIES
+        ## LIVE & OFFSITE -> LIVE & OFFSITE
+        ### RANDOM = 
+        ### MARKOVIAN = gammaPrime[k]*omega[k]
+        tmat[3,3,k]<-gammaPrime[primary]           
+        ## LIVE & OFFSITE -> LIVE & ONSITE
+        ### RANDOM = 
+        ### MARKOVIAN = (1-gammaPrime[k])*omega[k]
+        tmat[4,3,k]<-gammaPrimePrim[primary]        
+
+        
+        # FISH ON SITE ONSITE
+        ## DEAD -> ALIVE
         tmat[1,4,k]<- 0
+        ## LIVE & ONSITE -> DEAD & ONSITE
         tmat[2,4,k]<- 1-S[k]
-        tmat[3,4,k]<- gammaPrimePrime[k]*omega[k] # inside -> outside
-        tmat[4,4,k]<- (1-gammaPrimePrime[k])*omega[k] # inside-> inside
+        ## LIVE & ONSITE -> LIVE & OFFSITE
+        ### RANDOM = 
+        ### MARKOVIAN = gammaPrime[k]*omega[k]       
+        tmat[3,4,k]<- gammaPrimePrime[k]*omega[k]       
+        ## LIVE & OFFSITE -> LIVE & ONSITE
+        ### RANDOM = 
+        ### MARKOVIAN = (1-gammaPrimePrime[k])*omega[k]          
+        tmat[4,4,k]<- (1-gammaPrimePrime[k])*omega[k]   # inside-> inside
         }
 
 
     ###################################################################
-    # THE MODEL    
+    #
+    # THE OBSERVAION MODEL FOR PHYSICAL CAPTURES    
+    #
     ###################################################################    
     for(m in 1:M)
         {
-        z[m,1]~ dcat(tmat[1:4,1,1]) 
+        # FIRST YEAR
+        Z[m,1]~ dcat(tmat[1:4,1,1]) 
         for(j in 1:T2[1])
             {
             y[m,j,1] ~ dbern(p[1]*equals(z[m,1],4)) 
-            }    
-        for(i in 2:T)
+            } # j
+        # SUBSEQUENT PRIMARY OCCASIONS            
+        for(i in 2:P)
             {
             z[m,i] ~ dcat(tmat[1:4, z[m,i-1],i])
             for(j in 1:T2[i])
                 {
                 y[m,j,i] ~ dbern(p[i]*equals(z[m,i],4)) 
-                } 
-            }
-        }        
-    }
+                } # j
+            } # P
+        } # m        
+    }# end
    
     
     

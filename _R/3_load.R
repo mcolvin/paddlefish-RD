@@ -304,6 +304,11 @@ indx<-which(rowSums(ch_acoustic)>0)
 ch_acoustic<- ch_acoustic[indx,]
 fish_acoustic<- fish_acoustic[indx,]
 
+## MATRIX OF WHEN KNOWN OUTCOMES
+
+
+
+
 #######################################################################
 ## PIT TAGGED DATASET
 #######################################################################
@@ -319,6 +324,8 @@ ch<- rbind(as.matrix(ch),
 fish<-data.frame(id=c(1:nrow(ch)),
     pit=c(pit,rep(0,N-M)))   
 
+Z<- matrix(1,nrow=N,ncol=max(occasions$pocc))
+## FILL KNOWN STATES WITH NAs
 
 
 dat<-list(
