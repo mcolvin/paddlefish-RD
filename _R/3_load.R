@@ -7,7 +7,7 @@
 # TRASMITTTER %IN% C(11532,11529)
 # pit==1005085830
 
-
+dat<-list()
 
 #######################################################################
 #
@@ -17,51 +17,74 @@
 
 comm<- odbcConnectAccess2007(file.path(Sys.getenv("USERPROFILE"),"Google Drive/Paddlefish/Paddlefish Database.accdb"))
 
-
-
 #######################################################################
-# EFFORT DATA
+#
+# QUERY EFFORT DATA
+#
 #######################################################################
-
-#effort<- sqlFetch(comm,
-#    'qry-effort-data')
     
 effort<- sqlQuery(comm,
-    "SELECT [Paddlefish Effort Data].occasionId, [Paddlefish Effort Data].ID AS id, [Paddlefish Effort Data].Date AS [date], [Paddlefish Effort Data].set_number, [Paddlefish Effort Data].effort, [Paddlefish Effort Data].n_paddlefish
-FROM [Paddlefish Effort Data];")    
-    
+    "SELECT [Paddlefish Effort Data].occasionId, [Paddlefish Effort Data].ID AS id, 
+    [Paddlefish Effort Data].Date AS [date], 
+    [Paddlefish Effort Data].set_number, 
+    [Paddlefish Effort Data].effort, 
+    [Paddlefish Effort Data].n_paddlefish
+    FROM [Paddlefish Effort Data];")    
+
 ## FORMAT AND CLEAN UP EFFORT DATA
 effort$doy<-as.numeric(format(effort$date, "%j"))
 effort$year<-as.numeric(format(effort$date, "%Y"))
-## THESE ARE SETS THAT WERE FISHED 
-## CONCURRENT WITH ANOTHER SET
-effort<- subset(effort,set_number!=9999)
-## SUBSET OCCASIONS PRIOR TO
-## MARCH 2016 (when we put in reciever
-#effort<- subset(effort, !(year==2016 & doy < 78| year==2015))
 
-## SUMMARIZE PRIMARY OCCASIONS
-primary_occasions<- data.frame(
-    occasion=unique(paste(effort$year,effort$doy,sep="_")))
-primary_occasions$id<- 1:nrow(primary_occasions)
-primary_occasions$year_f<- as.numeric(substr(primary_occasions$occasion,1,4))+
-    (as.numeric(substr(primary_occasions$occasion,6,nchar(as.character(primary_occasions$occasion))))/365)
 
-    
-    
+primary<- aggregate(effort~occasionId+date+doy,effort,length)
+primary<- primary[order(primary$occasionId),]
+primary$dt<- c(0,round(diff(primary$date),0))
+primary<- primary[,-2]
+names(primary)[3]<- "secoccs"
+dat$primary<- primary
+dat$secondary<- effort[,-c(3,6,7,8)]
+
+
 ####################################################################### 
 ##   
 ## TAGGING DATA
 ##
 #######################################################################
+taggingData<- sqlQuery(comm,"SELECT [Paddlefish Tagging Data].ID AS id,
+        [Paddlefish Tagging Data].occasionId AS occasionId,
+        [Paddlefish Tagging Data].Date,
+        [Paddlefish Tagging Data].set AS set_number,         
+        [Paddlefish Tagging Data].tl, 
+        [Paddlefish Tagging Data].rfl,         
+        [Paddlefish Tagging Data].efl, 
+        [Paddlefish Tagging Data].girth,         
+        [Paddlefish Tagging Data].floy_color, 
+        [Paddlefish Tagging Data].floy_number,         
+        [Paddlefish Tagging Data].weight, 
+        [Paddlefish Tagging Data].pit,         
+        [Paddlefish Tagging Data].new_recap, 
+        [Paddlefish Tagging Data].transmitter,         
+        [Paddlefish Tagging Data].sex     
+    FROM [Paddlefish Tagging Data]     
+    ORDER BY [Paddlefish Tagging Data].Date;")
 
-#taggingData<- sqlFetch(comm,
-#   "qry-tagging-data")
+taggingData<- taggingData[which(is.na(taggingData$occasionId)==FALSE),]
+    
+## MERGE SECONDARY ID
+xx<-merge(taggingData,dat$secondary, by=c("occasionId","set_number"),all.x=TRUE)
+xx$tmp<-1
+xx$secid<-factor(xx$id.y,levels=dat$secondary$id)
+test<-reshape2::dcast(xx,pit~secid,value.var="tmp",sum,
+    drop=FALSE)
 
-taggingData<- sqlQuery(comm,"SELECT [Paddlefish Tagging Data].ID AS id, [Paddlefish Tagging Data].Date, [Paddlefish Tagging Data].set, [Paddlefish Tagging Data].tl, [Paddlefish Tagging Data].rfl, [Paddlefish Tagging Data].efl, [Paddlefish Tagging Data].girth, [Paddlefish Tagging Data].floy_color, [Paddlefish Tagging Data].floy_number, [Paddlefish Tagging Data].weight, [Paddlefish Tagging Data].pit, [Paddlefish Tagging Data].new_recap, [Paddlefish Tagging Data].transmitter, [Paddlefish Tagging Data].sex, [Paddlefish Tagging Data].setId
-FROM [Paddlefish Tagging Data]
-ORDER BY [Paddlefish Tagging Data].Date;")
+## DETERMINE WHICH FISH ARE ACOUSTICALLY TAGGED
+reshape2::dcast(taggingData,pit~transmitter,value.var='id',length)
+    
 
+
+
+
+   
 ## EXTRACT DAY OF YEAR FROM DATE
 taggingData$doy<-as.numeric(
     format(taggingData$Date, "%j"))
@@ -81,8 +104,10 @@ taggingData<- subset(taggingData, Date %in% unique(effort$date))
 
 #tags<- sqlFetch(comm,
 #    'qry-transmitter-number')
-tags<-sqlQuery(comm,"SELECT Right([Transmitter Numbers.Transmitter],5) AS transmitter, [Transmitter Numbers].[Tag Number] AS tagNumber, [Transmitter Numbers].[Implantation Date] AS implantDate
-FROM [Transmitter Numbers];")
+tags<-sqlQuery(comm,"SELECT Right([Transmitter Numbers.Transmitter],5) AS transmitter, 
+        [Transmitter Numbers].[Tag Number] AS tagNumber, 
+        [Transmitter Numbers].[Implantation Date] AS implantDate
+    FROM [Transmitter Numbers];")
 
 
 tags$first_tagged<- paste(
@@ -325,103 +350,6 @@ pp<- dcast(poolReciever,pit~id,value.var="tmp",sum)
 for(i in 2:ncol(pp))
     {
     pp[,i]<- ifelse(pp[,i]>0,1,0)
-    }
-
-makeData<- function(occasion,...)
-    {
-    
-    ## acoustic fish available (tagged an in the system)
-    atLarge<- as.data.frame(ac_tagged[,c(1,occasion+1)])
-    atLarge<- atLarge[which(atLarge[,2]==1),]## CENSOR FISH LEAVING SYSTEM
-    names(atLarge)<- c("pit","inArea") 
-    ## FISH ON RECIEVER
-    onReciever<- pp[,c(1,which(names(pp)==occasion))]
-    names(onReciever)<-c("pit","detected")
-    knownStates<-merge(atLarge,onReciever,by='pit',all.x=TRUE)
-    knownStates$state<-ifelse(knownStates$detected==1,1,2)
-    knownStates<-knownStates[,-c(2,3)]
-    #table(knownStates[,2])
-    sets<- subset(ggg,id==occasion&set>0)
-    sets<-as.character(paste(sets$year,sets$doy,sets$set,sep="_"))
-    ch_dat<- subset(xxx,id==occasion & set>0)
-    ch_dat$occ_id<- factor(ch_dat$occ_id,
-        levels=sets)    
-    ch<- dcast(ch_dat, pit~occ_id,
-        value.var='tmp',
-        drop=FALSE,
-        fun=sum)
-    ch<-merge(knownStates,ch,
-        by.x="pit",
-        by.y="pit",
-        all=TRUE)
-    ch$state<- ifelse(is.na(ch$state),1,ch$state)
-    ch[is.na(ch)]<-0
-    
-    fish<- ch[,c(1:2)]
-    ch<- as.matrix(ch[,-c(1:2)])
-    knownn<- nrow(ch)
-    daug<- 100
-    Z<-c(rep(NA,knownn),rep(3,daug))    
-    
-    for(i in 1:daug)
-        {
-        ch<- rbind(ch,matrix(0,1,ncol(ch)))        
-        }
-
-    
-
-    out<-list(
-        knownn=knownn,
-        M=nrow(ch),
-        denom=length(atLarge),
-        
-        Z=Z,
-        fish=fish,
-        ch=ch)
-    return(out)
-    }
-
-
-
-## GO BACK TO M0.
-makeData_MO<- function(occasion,...)
-    {
-    ## FISH ON RECIEVER
-    onReciever<- pp[,c(1,which(names(pp)==occasion))]
-    names(onReciever)<-c("pit","detected")
-    onReciever<- subset(onReciever,detected==1)
-
-    sets<- subset(ggg,id==occasion&set>0)
-    sets<-as.character(paste(sets$year,sets$doy,sets$set,sep="_"))
-    ch_dat<- subset(xxx,id==occasion & set>0)
-    ch_dat$occ_id<- factor(ch_dat$occ_id,
-        levels=sets)
-    if(nrow(ch_dat)>0 & !is.null(ncol(onReciever)))
-        {
-
-        ch<- dcast(ch_dat, pit~occ_id,
-            value.var='tmp',
-            drop=FALSE,
-            fun=sum)
-        ch<-merge(onReciever,ch,by="pit",all=TRUE)    
-        ch$detected<-ifelse(is.na(ch$detected==1),2,ch$detected)  
-        ch[is.na(ch)]<-0  
-        ch<-as.matrix(ch)
-        
-        cha<-ch[ch[,2]==1,-c(1:2)]
-        #chp<-as.matrix(ch[ch[,2]==2,-c(1:2)],nrow=length(which(ch$detected==2)) ,ncol=ncol(cha))
-        chp<-ch[ch[,2]==2,-c(1:2),drop=FALSE]
-        dat_aug<- 100
-        z<- c(rep(1,nrow(chp)),rep(0,dat_aug-nrow(chp)))
-        chp<-rbind(chp,matrix(0,nrow=dat_aug-nrow(chp) ,ncol(chp)))# data augmentation needs to be matrix of 0s not NAs for JAGs
-        out<- list(ch=as.matrix(chp),
-            cha=as.matrix(cha), 
-            Ncha=nrow(cha),
-            occ=ncol(chp),
-            M=nrow(chp))
-        
-        return(out)
-        }else{return(list(ret=-1))}
     }
 
 #######################################################################

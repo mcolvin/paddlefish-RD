@@ -41,9 +41,6 @@ primary<- function()
 	p~dunif(0,1)
     }
 
-
-
-
 mod_RD<- function()
 	{
         
@@ -122,11 +119,6 @@ mod_RD<- function()
         }        
     }
    
-
-
-
-
-
 mod<-function()
 	{
 	for(i in 1:M)
@@ -314,5 +306,104 @@ sim_ch<-function(inputs,...)
         Z_inn=Z_inn,
         Z_out=Z_out))
     return(out)
+    }
+
+
+
+makeData<- function(occasion,...)
+    {
+    
+    ## acoustic fish available (tagged an in the system)
+    atLarge<- as.data.frame(ac_tagged[,c(1,occasion+1)])
+    atLarge<- atLarge[which(atLarge[,2]==1),]## CENSOR FISH LEAVING SYSTEM
+    names(atLarge)<- c("pit","inArea") 
+    ## FISH ON RECIEVER
+    onReciever<- pp[,c(1,which(names(pp)==occasion))]
+    names(onReciever)<-c("pit","detected")
+    knownStates<-merge(atLarge,onReciever,by='pit',all.x=TRUE)
+    knownStates$state<-ifelse(knownStates$detected==1,1,2)
+    knownStates<-knownStates[,-c(2,3)]
+    #table(knownStates[,2])
+    sets<- subset(ggg,id==occasion&set>0)
+    sets<-as.character(paste(sets$year,sets$doy,sets$set,sep="_"))
+    ch_dat<- subset(xxx,id==occasion & set>0)
+    ch_dat$occ_id<- factor(ch_dat$occ_id,
+        levels=sets)    
+    ch<- dcast(ch_dat, pit~occ_id,
+        value.var='tmp',
+        drop=FALSE,
+        fun=sum)
+    ch<-merge(knownStates,ch,
+        by.x="pit",
+        by.y="pit",
+        all=TRUE)
+    ch$state<- ifelse(is.na(ch$state),1,ch$state)
+    ch[is.na(ch)]<-0
+    
+    fish<- ch[,c(1:2)]
+    ch<- as.matrix(ch[,-c(1:2)])
+    knownn<- nrow(ch)
+    daug<- 100
+    Z<-c(rep(NA,knownn),rep(3,daug))    
+    
+    for(i in 1:daug)
+        {
+        ch<- rbind(ch,matrix(0,1,ncol(ch)))        
+        }
+
+    
+
+    out<-list(
+        knownn=knownn,
+        M=nrow(ch),
+        denom=length(atLarge),
+        
+        Z=Z,
+        fish=fish,
+        ch=ch)
+    return(out)
+    }
+
+
+
+## GO BACK TO M0.
+makeData_MO<- function(occasion,...)
+    {
+    ## FISH ON RECIEVER
+    onReciever<- pp[,c(1,which(names(pp)==occasion))]
+    names(onReciever)<-c("pit","detected")
+    onReciever<- subset(onReciever,detected==1)
+
+    sets<- subset(ggg,id==occasion&set>0)
+    sets<-as.character(paste(sets$year,sets$doy,sets$set,sep="_"))
+    ch_dat<- subset(xxx,id==occasion & set>0)
+    ch_dat$occ_id<- factor(ch_dat$occ_id,
+        levels=sets)
+    if(nrow(ch_dat)>0 & !is.null(ncol(onReciever)))
+        {
+
+        ch<- dcast(ch_dat, pit~occ_id,
+            value.var='tmp',
+            drop=FALSE,
+            fun=sum)
+        ch<-merge(onReciever,ch,by="pit",all=TRUE)    
+        ch$detected<-ifelse(is.na(ch$detected==1),2,ch$detected)  
+        ch[is.na(ch)]<-0  
+        ch<-as.matrix(ch)
+        
+        cha<-ch[ch[,2]==1,-c(1:2)]
+        #chp<-as.matrix(ch[ch[,2]==2,-c(1:2)],nrow=length(which(ch$detected==2)) ,ncol=ncol(cha))
+        chp<-ch[ch[,2]==2,-c(1:2),drop=FALSE]
+        dat_aug<- 100
+        z<- c(rep(1,nrow(chp)),rep(0,dat_aug-nrow(chp)))
+        chp<-rbind(chp,matrix(0,nrow=dat_aug-nrow(chp) ,ncol(chp)))# data augmentation needs to be matrix of 0s not NAs for JAGs
+        out<- list(ch=as.matrix(chp),
+            cha=as.matrix(cha), 
+            Ncha=nrow(cha),
+            occ=ncol(chp),
+            M=nrow(chp))
+        
+        return(out)
+        }else{return(list(ret=-1))}
     }
     
