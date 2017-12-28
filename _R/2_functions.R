@@ -1,3 +1,49 @@
+
+primary<- function()
+	{# MODEL TO RUN A SINGLE OCCASSION
+    ## STATE PROBABILITIES
+    Sprob[1]<- lambda*omega # IN POOL AND CAPTURABLE
+    Sprob[2]<- (1-lambda)*omega # IN CREEK
+    Sprob[3]<- 1-omega   # NOT IN POPULATION
+   
+    ## LATENT STATE 1, 2, OR 3
+	for(i in 1:M)
+		{
+		Z[i]~dcat(Sprob)
+        }
+    ## DETECTION MODEL FOR ALL FISH (PIT AND ACOUSTIC)
+    for(i in 1:M)
+        {
+        for(s in 1:occs)
+            {
+            cap_p[i,s]<- equals(Z[i],1)*p[s]
+            ch[i,s]~bern(cap_p[i,s])
+            }
+        }
+
+
+	## DERIVED PARAMETERS
+    for(i in 1:Naug)
+        {
+        N[i]<-equals(Z[i],1) + equals(Z[i],2)
+        }
+    Nhat<- sum(N[])
+    
+    
+    ## KNOWN STATES
+    for(i in 1:nknown)
+        {
+        Z[known[i,1]]<-known[i,2] # FILL KNOWN STATES
+        }
+	
+	## PRIORS
+	omega~dunif(0,1)
+	p~dunif(0,1)
+    }
+
+
+
+
 mod_RD<- function()
 	{
         
@@ -76,6 +122,43 @@ mod_RD<- function()
         }        
     }
    
+
+
+
+
+
+mod<-function()
+	{
+	for(i in 1:M)
+		{
+		z[i]~dbern(omega) # LATENT VARIABLE, DATA AUGMENTATION
+		for(j in 1:4)
+			{
+			p_eff[i,j]<- z[i]*p_cap[j] # CONDITIONAL CAPTURE PROBABILITY
+			ch[i,j]~dbern(p_eff[i,j])			
+			}#i
+		}#j
+	# ACOUSTICALLY TAGGED FISH
+	for(i in 1:Ncha)
+		{
+		for(j in 1:occ)
+			{
+			cha[i,j]~dbern(p_cap[j])
+			}
+		}
+#	# CAPTURE PROBABILITY AS A FUNCTION OF EFFORT
+	for(occ in 1:occ)
+		{
+		y[occ]<- a
+		p_cap[occ]<- exp(y[occ])/(1+exp(y[occ]))
+		}
+	# DERIVED PARAMETERS
+	N<-sum(z[]) + Ncha
+		
+	# PRIORS
+	omega~dunif(0,1)
+	a~dnorm(0,0.37)
+    }
     
     
 sim_ch<-function(inputs,...)

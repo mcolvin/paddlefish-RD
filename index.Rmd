@@ -13,11 +13,11 @@ rmarkdown::render("index.Rmd")
 stuff
 
 ```{r,echo=FALSE, eval=FALSE}
-source("./_R/1_global.R")  	
-source("./_R/2_functions.R")         
-source("./_R/3_load.R")     
-source("./_R/5_tables.R") 
-source("./_R/6_figures.R")  
+source("_R/1_global.R")  	
+source("_R/2_functions.R")         
+source("_R/3_load.R")     
+source("_R/5_tables.R") 
+source("_R/6_figures.R")  
 ```
 
 	
@@ -25,8 +25,6 @@ source("./_R/6_figures.R")
 #	source("./R/7_analysis.R")
 ```	
 ```{r,echo=FALSE, eval=FALSE}
-# plot pool detections over time - 
-presPlot()
 par(oma=c(0,0,0,0),mar=c(3,3,0.25,1))
 figures(1)
 figures(2)
@@ -34,8 +32,8 @@ figures(2)
    
 ## Appendix
 
-BUGs model used to estimate abundance using auxillary information
+BUGs model used to estimate abundance using auxiliary information
 from acoustically tagged fish.
-```{r}
-mod
+```{r,echo=FALSE}
+print(mod)
 ```

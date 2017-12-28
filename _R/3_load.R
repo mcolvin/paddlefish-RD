@@ -10,11 +10,12 @@
 
 
 #######################################################################
+#
 # COM TO DBASE
+#
 #######################################################################
 
-comm<- odbcConnectAccess2007("C:/Users/mcolvin/Google Drive/Paddlefish/Paddlefish Database-2.accdb")
-
+comm<- odbcConnectAccess2007(file.path(Sys.getenv("USERPROFILE"),"Google Drive/Paddlefish/Paddlefish Database.accdb"))
 
 
 
@@ -45,8 +46,13 @@ primary_occasions<- data.frame(
 primary_occasions$id<- 1:nrow(primary_occasions)
 primary_occasions$year_f<- as.numeric(substr(primary_occasions$occasion,1,4))+
     (as.numeric(substr(primary_occasions$occasion,6,nchar(as.character(primary_occasions$occasion))))/365)
-#######################################################################    
-# TAGGING DATA
+
+    
+    
+####################################################################### 
+##   
+## TAGGING DATA
+##
 #######################################################################
 
 #taggingData<- sqlFetch(comm,
@@ -63,9 +69,12 @@ taggingData$doy<-as.numeric(
 taggingData$year<-as.numeric(
     format(taggingData$Date, "%Y"))
 ## SUBSET OCCASIONS PRIOR TO
-## MARCH 2016 (when we put in reciever
+## MARCH 2016 (when we put in receiver
 #taggingData<- subset(taggingData, !(year==2016 & doy < 78| year==2015))
 taggingData<- subset(taggingData, Date %in% unique(effort$date))
+
+
+
 #######################################################################
 # ACOUSTIC TAG DATA
 #######################################################################
@@ -92,18 +101,57 @@ tags$year_tagged<- as.numeric(format(tags$implantDate,"%Y"))
 tags$doy_tagged<- as.numeric(format(tags$implantDate,"%j"))
 
 
+
+#######################################################################
+#
+#  FISH THAT LEFT AND RETURNED TO THE SYSTEM AND WHEN
+#
+#######################################################################
+
+# MAKE A MATRIX OF WHEN FISH ARE AVAILABLE
+
+left<- data.frame(
+    pit=c(1005085885, 1005085855, 1005085870, 1005085839, 1005085832, 1005085858,
+        1005085863, 1005085855, 1005085842), 
+    id_left=c(8, 9, 34, 37, 37, 37, 37, 37, 37),
+    id_return=c(NA,11,NA,39,NA,NA,NA,NA,NA))
+tags_ac<- merge(tags,left,by="pit",all.x=TRUE)
+
+
+## 
+ac_tagged<-matrix(NA,nrow(tags_ac),max(primary_occasions$id))
+for(i in 1:nrow(ac_tagged))
+    {
+    ac_tagged[i,tags_ac$id[i]:max(primary_occasions$id)]<-1
+    if(!(is.na(tags_ac$id_left[i])) & is.na(tags_ac$id_return[i]))
+        {
+        ac_tagged[i,tags_ac$id_left[i]:max(primary_occasions$id)]<-0
+        }
+    if(!(is.na(tags_ac$id_left[i])) & !(is.na(tags_ac$id_return[i])))
+        {
+        ac_tagged[i,tags_ac$id_left[i]:tags_ac$id_return[i]]<-0
+        }        
+       }
+        
+ac_tagged<- cbind(tags_ac$pit,ac_tagged)
+
+
+
+
+
 #######################################################################
 # POOL RECIEVER DATA
 #######################################################################
 
-#poolReciever<- sqlFetch(comm,
-#    "qry-pool-reciever-data")
+poolReciever<- sqlFetch(comm,"qry-pool-reciever-data")
 
-#recieverData<-sqlQuery(comm,"SELECT [Reciever Data].[Date and Time (UTC)] AS [date], 
-#    Right([Reciever Data.Transmitter],5) AS transmitter, 
- #   [Reciever Data].[Site ID] AS siteId
-#    FROM [Reciever Data]
-#    WHERE ((([Reciever Data].[Site ID])='12'));")
+recieverData<-sqlQuery(comm,"SELECT [Reciever Data].[Date and Time (UTC)] AS [date], 
+    DatePart("yyyy",[Date and Time (UTC)]) AS [year], 
+    DatePart("y",[Date and Time (UTC)]) AS doy, Right([Reciever Data.Transmitter],5) AS transmitter, [Reciever Data].[Site ID] AS siteId
+    FROM [Reciever Data]
+    WHERE ((([Reciever Data].[Site ID])='12'));")
+
+
 #saveRDS(recieverData,file="_output/recieverData.RDS")
  
 recieverData<- readRDS("_output/recieverData.RDS")
@@ -137,12 +185,15 @@ poolReciever<- subset(poolReciever, date %in% unique(effort$date))
 poolReciever<-poolReciever[order(poolReciever$date),]
 
 
+
     
     
     
 #######################################################################
+#
 # SET UP DATA FOR ROBUST DESIGN 
 # IN PROGRAM MARK
+#
 #######################################################################
 
 ttt<- taggingData[,match(c("pit","year","doy","set"),names(taggingData))]
@@ -157,6 +208,7 @@ occasions<- dcast(effort,
     year+doy~"sets",
     value.var="set_number",
     fun=length)
+occasions$id<-1:nrow(occasions)
 ## VECTOR OF OCCASIONS FOR RMARK
 occ<- unlist(lapply(1:nrow(occasions),
     function(x){c(rep(0,occasions$sets[x]),1)}))# ADD 1 TO THE END TO ACCOUNT FOR ACOUSTIC
@@ -209,11 +261,16 @@ fish$id<- ifelse(is.na(fish$id),0,fish$id)
 ch<- ch[order(pit),]
 fish<- fish[order(fish$pit),]
 ch_raw<-ch
-# BUNLDLE THIS UP 
+
+
+# BUNDLE THIS UP 
+# FOR PROCESSING BY RMARK
 ch_dat<- data.frame(ch=apply(ch[,-1],1,paste,collapse=""),
     freq=1,
     first_captured=fish$id,
     stringsAsFactors=FALSE)
+ch_dat$first_captured<- as.factor(ch_dat$first_captured)
+
 
 occ_indx<- which(c(occ,1)==1)
 occ_strt<- occ_indx-c(occ_indx[1]-1, (diff(occ_indx)-1))
@@ -223,6 +280,9 @@ for(i in 1:length(occ_indx))
     {
     ncap<-c(ncap, sum(apply(ch_raw[,occ_strt[i]:occ_indx[i]],1,max)))
     }
+    
+    
+    
 
 #######################################################################
 ## only do last occasion
@@ -250,8 +310,119 @@ occ_last<-occ_last[-length(occ_last)]
 
 odbcClose(comm)
 
+#######################################################################
+#
+#  DATASET FOR ESTIMATING ABUNDANCE FOR A SINGLE OCCASION
+#
+#######################################################################
+poolReciever$tmp<-1
+poolReciever$occasion<-paste(poolReciever$year,poolReciever$doy,sep="_")
+poolReciever<- merge(poolReciever, 
+    primary_occasions,
+    by="occasion",
+    all.x=TRUE)
+pp<- dcast(poolReciever,pit~id,value.var="tmp",sum)
+for(i in 2:ncol(pp))
+    {
+    pp[,i]<- ifelse(pp[,i]>0,1,0)
+    }
+
+makeData<- function(occasion,...)
+    {
+    
+    ## acoustic fish available (tagged an in the system)
+    atLarge<- as.data.frame(ac_tagged[,c(1,occasion+1)])
+    atLarge<- atLarge[which(atLarge[,2]==1),]## CENSOR FISH LEAVING SYSTEM
+    names(atLarge)<- c("pit","inArea") 
+    ## FISH ON RECIEVER
+    onReciever<- pp[,c(1,which(names(pp)==occasion))]
+    names(onReciever)<-c("pit","detected")
+    knownStates<-merge(atLarge,onReciever,by='pit',all.x=TRUE)
+    knownStates$state<-ifelse(knownStates$detected==1,1,2)
+    knownStates<-knownStates[,-c(2,3)]
+    #table(knownStates[,2])
+    sets<- subset(ggg,id==occasion&set>0)
+    sets<-as.character(paste(sets$year,sets$doy,sets$set,sep="_"))
+    ch_dat<- subset(xxx,id==occasion & set>0)
+    ch_dat$occ_id<- factor(ch_dat$occ_id,
+        levels=sets)    
+    ch<- dcast(ch_dat, pit~occ_id,
+        value.var='tmp',
+        drop=FALSE,
+        fun=sum)
+    ch<-merge(knownStates,ch,
+        by.x="pit",
+        by.y="pit",
+        all=TRUE)
+    ch$state<- ifelse(is.na(ch$state),1,ch$state)
+    ch[is.na(ch)]<-0
+    
+    fish<- ch[,c(1:2)]
+    ch<- as.matrix(ch[,-c(1:2)])
+    knownn<- nrow(ch)
+    daug<- 100
+    Z<-c(rep(NA,knownn),rep(3,daug))    
+    
+    for(i in 1:daug)
+        {
+        ch<- rbind(ch,matrix(0,1,ncol(ch)))        
+        }
+
+    
+
+    out<-list(
+        knownn=knownn,
+        M=nrow(ch),
+        denom=length(atLarge),
+        
+        Z=Z,
+        fish=fish,
+        ch=ch)
+    return(out)
+    }
 
 
+
+## GO BACK TO M0.
+makeData_MO<- function(occasion,...)
+    {
+    ## FISH ON RECIEVER
+    onReciever<- pp[,c(1,which(names(pp)==occasion))]
+    names(onReciever)<-c("pit","detected")
+    onReciever<- subset(onReciever,detected==1)
+
+    sets<- subset(ggg,id==occasion&set>0)
+    sets<-as.character(paste(sets$year,sets$doy,sets$set,sep="_"))
+    ch_dat<- subset(xxx,id==occasion & set>0)
+    ch_dat$occ_id<- factor(ch_dat$occ_id,
+        levels=sets)
+    if(nrow(ch_dat)>0 & !is.null(ncol(onReciever)))
+        {
+
+        ch<- dcast(ch_dat, pit~occ_id,
+            value.var='tmp',
+            drop=FALSE,
+            fun=sum)
+        ch<-merge(onReciever,ch,by="pit",all=TRUE)    
+        ch$detected<-ifelse(is.na(ch$detected==1),2,ch$detected)  
+        ch[is.na(ch)]<-0  
+        ch<-as.matrix(ch)
+        
+        cha<-ch[ch[,2]==1,-c(1:2)]
+        #chp<-as.matrix(ch[ch[,2]==2,-c(1:2)],nrow=length(which(ch$detected==2)) ,ncol=ncol(cha))
+        chp<-ch[ch[,2]==2,-c(1:2),drop=FALSE]
+        dat_aug<- 100
+        z<- c(rep(1,nrow(chp)),rep(0,dat_aug-nrow(chp)))
+        chp<-rbind(chp,matrix(0,nrow=dat_aug-nrow(chp) ,ncol(chp)))# data augmentation needs to be matrix of 0s not NAs for JAGs
+        out<- list(ch=as.matrix(chp),
+            cha=as.matrix(cha), 
+            Ncha=nrow(cha),
+            occ=ncol(chp),
+            M=nrow(chp))
+        
+        return(out)
+        }else{return(list(ret=-1))}
+    }
 
 #######################################################################
 # BUNDLE UP FOR JAGS
@@ -319,21 +490,25 @@ ch<- rbind(as.matrix(ch),
 fish<-data.frame(id=c(1:nrow(ch)),
     pit=c(pit,rep(0,N-M)))   
 
+    
+    
+    
 
 
 dat<-list(
+    ## PIT TAGGED FISH
     N=N,
     pocc=as.matrix(occasions),
     socc=as.matrix(socc),
     fish=as.matrix(fish),
     ch=as.matrix(ch),
-    
+    ## ACOUSTIC FISH
     ch_acoustic=as.matrix(ch_acoustic),
     ch_acoustic=as.matrix(ch_acoustic),
     receiverOn=receiverOn
     #fish_acoustic=fish_acoustic[1,2]
     )
     
-    
+save(dat ,file="full.RData")
     
     
