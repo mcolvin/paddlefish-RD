@@ -78,7 +78,7 @@ test<-reshape2::dcast(xx,pit~secid,value.var="tmp",sum,
     drop=FALSE)
 
 ## DETERMINE WHICH FISH ARE ACOUSTICALLY TAGGED
-reshape2::dcast(taggingData,pit~transmitter,value.var='id',length)
+#reshape2::dcast(taggingData,pit~transmitter,value.var='id',length)
     
 
 
@@ -114,9 +114,10 @@ tags$first_tagged<- paste(
     format(tags$implantDate,"%Y"),
     as.numeric(format(tags$implantDate,"%j")),
     sep="_")
-tags<-merge(tags,primary_occasions  
-    ,by.x="first_tagged",
-    by.y="occasion",all.x=TRUE)
+#tags<-merge(tags,primary_occasions,by.x="first_tagged",
+#   by.y="occasion",all.x=TRUE)
+
+
 ## ADD A PIT TAG NUMBER TO EACH TRANSMITTER
 pit<- dcast(taggingData,pit+transmitter~"yy",
     value.var="transmitter",length)[,-3]

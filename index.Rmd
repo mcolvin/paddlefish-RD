@@ -21,7 +21,7 @@ source("_R/6_figures.R")
 ```
 
 	
-```{r}
+```{r,eval=FALSE}
 #	source("./R/7_analysis.R")
 ```	
 ```{r,echo=FALSE, eval=FALSE}
