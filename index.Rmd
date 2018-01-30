@@ -8,6 +8,8 @@ output:
 
 <!--
 rmarkdown::render("index.Rmd")
+to do:
+1. make matrix of availability for capture... or assign states to acoustic fish
 -->
 
 stuff
@@ -22,8 +24,11 @@ source("_R/6_figures.R")
 
 	
 ```{r,eval=FALSE}
-#	source("./R/7_analysis.R")
+source("./R/7_analysis.R")
 ```	
+
+
+
 ```{r,echo=FALSE, eval=FALSE}
 par(oma=c(0,0,0,0),mar=c(3,3,0.25,1))
 figures(1)
