@@ -61,7 +61,6 @@ FROM [Paddlefish Tagging Data];")
 
 
 ## ASSIGN OCCASSION ID 
-
 tmp<-merge(taggingData,effort[,c(1:4)],by=c("date","set_number"),all.x=TRUE)
 tmp<- tmp[which(is.na(tmp$occasionId)==FALSE),]
    
