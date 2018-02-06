@@ -38,8 +38,8 @@ effort$year<-as.numeric(format(effort$date, "%Y"))
 
 ## FORMATTING INDICES
 effort<- effort[order(effort$date,effort$set_number),]
-effort$id<-c(1:nrow(effort))
-effort$occasionid<- sequence(rle(effort$occasionId)$length)  
+effort$secid<-as.factor(c(1:nrow(effort)))## SECONDARY OCCASION ID
+effort$occasionId<- sequence(rle(effort$occasionId)$length)  
 
 
 #primary<- aggregate(effort~occasionId+date+doy,effort,length)
@@ -60,21 +60,24 @@ taggingData<- sqlQuery(comm,"SELECT [Paddlefish Tagging Data].ID, [Paddlefish Ta
 FROM [Paddlefish Tagging Data];")
 
 
-## ASSIGN OCCASSION ID 
-tmp<-merge(taggingData,effort[,c(1:4)],by=c("date","set_number"),all.x=TRUE)
+## ASSIGN OCCASSION ID TO MASTER CAPTURE RECAPTURE DATASET
+tmp<-merge(taggingData,effort,by=c("date","set_number"),all.x=TRUE)
 tmp<- tmp[which(is.na(tmp$occasionId)==FALSE),]
-   
+tmp$tmp<-1
+## SET UP CAPTURE HISTORY FOR ALL FISH
+ch<-reshape2::dcast(tmp,pit~secid,value.var="tmp",sum,
+    drop=FALSE)
 
+    
+    
+    
+    
 ## DETERMINE WHICH FISH ARE ACOUSTICALLY TAGGED
 acc_tags<- reshape2::dcast(tmp,pit~transmitter,value.var='id',length)
 acc_tags<- acc_tags[,-which(names(acc_tags)=="NA")]  
 acc_tags<- acc_tags$pit[which(rowSums(acc_tags[,-1])>0)]
 
-   
 
-## SET UP CAPTURE HISTORY FOR ALL FISH
-ch<-reshape2::dcast(xx,pit~secid,value.var="tmp",sum,
-    drop=FALSE)
 ch_pit<- ch[which(!(ch$pit%in% acc_tags)),-1] 
 ch_acc<- ch[which(ch$pit%in% acc_tags),-1]    
     
@@ -90,7 +93,9 @@ xx$secid<-factor(xx$id.y,levels=dat$secondary$id)
 
 
 
-   
+ 
+
+ 
 # MAKE A MATRIX OF WHEN FISH ARE AVAILABLE
 left<- data.frame(
     pit=c(1005085885, 1005085855, 1005085870, 1005085839, 1005085832, 1005085858,
