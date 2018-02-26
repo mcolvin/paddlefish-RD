@@ -24,66 +24,138 @@ comm<- odbcConnectAccess2007("C:/Users/mcolvin/Documents/projects/Paddlefish/ana
 #
 #######################################################################
     
-effort<- sqlQuery(comm,
-    "SELECT [Paddlefish Effort Data].occasionId, [Paddlefish Effort Data].ID AS id, 
-    [Paddlefish Effort Data].Date AS [date], 
-    [Paddlefish Effort Data].set_number, 
-    [Paddlefish Effort Data].effort, 
-    [Paddlefish Effort Data].n_paddlefish
-    FROM [Paddlefish Effort Data];")    
+effort<- sqlFetch(comm,"qry-effort-data")    
 
 ## FORMAT AND CLEAN UP EFFORT DATA
 effort$doy<-as.numeric(format(effort$date, "%j"))
 effort$year<-as.numeric(format(effort$date, "%Y"))
 
 ## FORMATTING INDICES
-effort<- effort[order(effort$date,effort$set_number),]
+effort<- effort[order(effort$date, effort$set_number),]
+#effort$sample<- paste(effort$year,effort$doy
+
+effort <- transform(effort,occasionId=as.numeric(factor(date)))
 effort$secid<-as.factor(c(1:nrow(effort)))## SECONDARY OCCASION ID
-effort$occasionId<- sequence(rle(effort$occasionId)$length)  
-
-
-#primary<- aggregate(effort~occasionId+date+doy,effort,length)
-#primary<- primary[order(primary$occasionId),]
-#primary$dt<- c(0,round(diff(primary$date),0))
-#primary<- primary[,-2]
-#names(primary)[3]<- "secoccs"
-#dat$primary<- primary
-#dat$secondary<- effort[,-c(3,6,7,8)]
-
 
 ####################################################################### 
 ##   
-## TAGGING DATA
+## QUERY TAGGING DATA
 ##
 #######################################################################
-taggingData<- sqlQuery(comm,"SELECT [Paddlefish Tagging Data].ID, [Paddlefish Tagging Data].date, [Paddlefish Tagging Data].set AS set_number, [Paddlefish Tagging Data].tl, [Paddlefish Tagging Data].rfl, [Paddlefish Tagging Data].efl, [Paddlefish Tagging Data].girth, [Paddlefish Tagging Data].floy_color, [Paddlefish Tagging Data].floy_number, [Paddlefish Tagging Data].weight, [Paddlefish Tagging Data].pit, [Paddlefish Tagging Data].new_recap, [Paddlefish Tagging Data].transmitter, [Paddlefish Tagging Data].sex
-FROM [Paddlefish Tagging Data];")
 
-
+## QUERY TAGGING DATA
+#taggingData<- sqlQuery(comm,"SELECT [Paddlefish Tagging Data].ID, [Paddlefish Tagging Data].date, [Paddlefish Tagging Data].set AS set_number, [Paddlefish Tagging Data].tl, [Paddlefish Tagging Data].rfl, [Paddlefish Tagging Data].efl, [Paddlefish Tagging Data].girth, [Paddlefish Tagging Data].floy_color, [Paddlefish Tagging Data].floy_number, [Paddlefish Tagging Data].weight, [Paddlefish Tagging Data].pit, [Paddlefish Tagging Data].new_recap, [Paddlefish Tagging Data].transmitter, [Paddlefish Tagging Data].sex FROM [Paddlefish Tagging Data];")
+taggingData<-sqlFetch(comm,"qry-capture-data")
+taggingData$year<- format(taggingData$Date,"%Y")
+taggingData$doy<- as.numeric(as.character(format(taggingData$Date,"%j")))
 ## ASSIGN OCCASSION ID TO MASTER CAPTURE RECAPTURE DATASET
-tmp<-merge(taggingData,effort,by=c("date","set_number"),all.x=TRUE)
+tmp<-merge(taggingData,effort,by=c("year","doy","set_number"),all.x=TRUE)
 tmp<- tmp[which(is.na(tmp$occasionId)==FALSE),]
 tmp$tmp<-1
 ## SET UP CAPTURE HISTORY FOR ALL FISH
 ch<-reshape2::dcast(tmp,pit~secid,value.var="tmp",sum,
     drop=FALSE)
 
-    
-    
-    
-    
+#######################################################################
+#
+#  LIST OF PIT TAGS FOR ACCOUSTIC TAGGED FISH
+#
+#######################################################################    
 ## DETERMINE WHICH FISH ARE ACOUSTICALLY TAGGED
-acc_tags<- reshape2::dcast(tmp,pit~transmitter,value.var='id',length)
-acc_tags<- acc_tags[,-which(names(acc_tags)=="NA")]  
-acc_tags<- acc_tags$pit[which(rowSums(acc_tags[,-1])>0)]
+acc_tags<- reshape2::dcast(tmp,pit+transmitter_long~"n",value.var='id',length)
+## SUBSET OUT ACOUSTICALLY TAGGED FISH
+acc_tags<- acc_tags[!(is.na(acc_tags$transmitter=="NA")),]  
 
+
+#######################################################################
+#
+#  CAPTURE HISTORIES FOR PIT AND ACCOUSTIC TAGGED FISH
+#
+#######################################################################
 
 ch_pit<- ch[which(!(ch$pit%in% acc_tags)),-1] 
-ch_acc<- ch[which(ch$pit%in% acc_tags),-1]    
+ch_acc<- ch[which(ch$pit%in% acc_tags$pit),-1]    
+ch_pit_pit<- ch[which(!(ch$pit%in% acc_tags)),1]   
+ch_acc_pit<- ch[which(ch$pit%in% acc_tags$pit),1]     
+    
+ 
+#######################################################################
+#
+# POOL RECIEVER DATA
+#
+#######################################################################
+acNumbers<- sqlFetch(comm,"Transmitter Numbers")
+
+poolReciever<- sqlFetch(comm,"qry-pool-reciever-data")
+## SUBSET TAGS WE USED ONLY, ELMINATE TAG COLLISIONS
+poolReciever<- subset(poolReciever,transmitter%in% acNumbers$Transmitter)
+poolReciever$transmitter<- factor(poolReciever$transmitter)
+# ONE FISH HAS 2 TRANSMITTERS IN IT
+# TRASMITTTER %IN% C(A69-1303-11532,A69-1303-11529)
+
+
+dailyEffort<-aggregate(n_paddlefish~occasionId+doy+year,effort,sum)
+
+
+poolReciever<-merge(poolReciever,dailyEffort,by=c("year","doy"),all.x=TRUE)  
+## SUBSET OUT DAYS THAT WERE NOT EFFORT
+poolReciever<- subset(poolReciever, !(is.na(n_paddlefish)))
+
+## WAS THE FISH DETECTED ON THE POOL RECIEVER ON THE SAMPLING OCCASION
+ppp<- reshape2::dcast(poolReciever,transmitter~occasionId,
+    value.var='n_paddlefish',length,drop=FALSE)
+
+## PRIMARY OCCASIONS
+prim<- unique(effort$occasionId)   
+prim<- prim[prim>5]    
+    
+    
+dat<-lapply(prim,function(x)
+    {
+    ## GET FIRST TO LAST OCCASION, WHAT WAS AT LARGE
+    pit<- ch_pit[,c(1:match(max(as.numeric(as.character(effort[effort$occasionId==prim[x],]$secid))),as.numeric(as.character(names(ch_pit)))))]
+    acc<- ch_acc[,c(1:match(max(as.numeric(as.character(effort[effort$occasionId==prim[x],]$secid))),as.numeric(as.character(names(ch_pit)))))]
+    
+    # CAPTURE HISTORIES
+    
+    ## PIT TAG ONLY FISH
+    ## PHYSICALLY CAPTURED
+    pit_indx<- which(rowSums(pit)>0)
+    pit<- pit[pit_indx,]
+    
+    ## ACCOUSTIC TAGGED FISH
+    ## PHYSICALLY CAPTURED
+    sec_indx<- as.numeric(as.character(effort[effort$occasionId==prim[x],]$secid))
+    acc_indx<- which(rowSums(acc)>0)
+    acc<- acc[acc_indx,sec_indx]
+    acc_pit<-ch_acc_pit[which(rowSums(acc)>=1)]
+    ## SUBSET ACCOUSTICALLY TAGGED FISH BY ONES THAT WERE
+    ## AROUND TO BE CAPTURED
+    ppp_col_indx<- match(as.character(x),names(ppp))
+    ppp_row_indx<- which(ppp[,ppp_col_indx]>0)
+    pitAvailible<- subset(acc_tags,acc_tags$transmitter_long%in% as.character(ppp[ppp_row_indx,1]))
+    
+    ## ACOUSTIC FISH AVAILABIBLE AT THE OCCASION
+    ## VECTOR OF TRANSMITTERS
     
     
     
-   
+    ppp[which(ppp$transmitter%in% pitAvailible$transmitter_long),]$transmitter
+    
+    ## 
+    
+    
+    })
+    
+    
+  
+
+  
+    
+    
+    
+
+
    
 ## MERGE SECONDARY ID
 xx<-merge(taggingData,dat$secondary, by=c("occasionId","set_number"),all.x=TRUE)
@@ -105,18 +177,6 @@ left<- data.frame(
 tags_ac<- merge(tags,left,by="pit",all.x=TRUE)
 
 
-
-#######################################################################
-# POOL RECIEVER DATA
-#######################################################################
-
-poolReciever<- sqlFetch(comm,"qry-pool-reciever-data")
-
-recieverData<-sqlQuery(comm,'SELECT [Reciever Data].[Date and Time (UTC)] AS [date], 
-    DatePart("yyyy",[Date and Time (UTC)]) AS [year], 
-    DatePart("y",[Date and Time (UTC)]) AS doy, Right([Reciever Data.Transmitter],5) AS transmitter, [Reciever Data].[Site ID] AS siteId
-    FROM [Reciever Data]
-    WHERE ((([Reciever Data].[Site ID])="12"));')
 
 
 # DATA AUGMENTATION
