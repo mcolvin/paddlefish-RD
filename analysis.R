@@ -1,4 +1,10 @@
 
+#######################################################################
+#
+#  LOAD SCRIPTS
+#
+#######################################################################
+
 source("_R/1_global.R")
 source("_R/2_functions.R")
 source("_R/3_load-PIT.R")
@@ -42,8 +48,8 @@ out <- R2jags::jags.parallel(data=dat,
 	model.file=mod,
     export_obj_names=c("Z","ZZ","qq","lo_G"),
 	n.chains = 3,	
-	n.iter = 150,	
-	n.burnin = 60, 
+	n.iter = 150000,	
+	n.burnin = 60000, 
 	n.thin=2,
 	working.directory=getwd())
 
@@ -51,38 +57,3 @@ out <- R2jags::jags.parallel(data=dat,
 
 
 
-
-
-
-dat<- makeData(40)
-dat$occs<-ncol(dat$ch)
-dat$inn_ac<- 31
-dat$total_ac<-42
-states<-dat$Z
-
-inits<- function()
-	{
-	list(omega=0.5,p=0.1,lambda=0.1)
-	}
-params<-c("cap_p","Sprob","Nhat",
-    "omega","p","lambda")	
-out <- jags(data=dat,
-	inits=inits,
-	parameters=params,	
-	model.file=primary,
-	n.chains = 3,	
-	n.iter = 15000,	
-	n.burnin = 6000, 
-	n.thin=2,
-	working.directory=getwd())
-plot(out)
-out
-
-
-
-
-
-
-
-
-## THE VR2 WAS IN THE POOL FOR GOOD 2016 DOY  189

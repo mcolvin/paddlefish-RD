@@ -14,8 +14,8 @@
 # COM TO DBASE
 #
 #######################################################################
-library(RODBC)
-comm<- odbcConnectAccess2007("C:/Users/mcolvin/Documents/projects/Paddlefish/analysis/data/Paddlefish Database.accdb")
+
+comm<- odbcConnectAccess2007("_dat/Paddlefish Database.accdb")
 
 #######################################################################
 #
@@ -23,7 +23,8 @@ comm<- odbcConnectAccess2007("C:/Users/mcolvin/Documents/projects/Paddlefish/ana
 #
 #######################################################################
     
-effort<- sqlFetch(comm,"qry-effort-data")    
+effort<- sqlQuery(comm,"SELECT [Paddlefish Effort Data].occasionId, [Paddlefish Effort Data].ID AS id, [Paddlefish Effort Data].Date AS [date], [Paddlefish Effort Data].set_number, [Paddlefish Effort Data].effort, [Paddlefish Effort Data].n_paddlefish
+FROM [Paddlefish Effort Data];")    
 
 ## FORMAT AND CLEAN UP EFFORT DATA
 effort$doy<-as.numeric(format(effort$date, "%j"))
@@ -36,6 +37,10 @@ effort<- effort[order(effort$date, effort$set_number),]
 effort <- transform(effort,occasionId=as.numeric(factor(date)))
 effort$secid<-as.factor(c(1:nrow(effort)))## SECONDARY OCCASION ID
 
+## START DATE
+strDate<- min(effort$date)
+
+
 ####################################################################### 
 ##   
 ## QUERY TAGGING DATA
@@ -43,8 +48,7 @@ effort$secid<-as.factor(c(1:nrow(effort)))## SECONDARY OCCASION ID
 #######################################################################
 
 ## QUERY TAGGING DATA
-#taggingData<- sqlQuery(comm,"SELECT [Paddlefish Tagging Data].ID, [Paddlefish Tagging Data].date, [Paddlefish Tagging Data].set AS set_number, [Paddlefish Tagging Data].tl, [Paddlefish Tagging Data].rfl, [Paddlefish Tagging Data].efl, [Paddlefish Tagging Data].girth, [Paddlefish Tagging Data].floy_color, [Paddlefish Tagging Data].floy_number, [Paddlefish Tagging Data].weight, [Paddlefish Tagging Data].pit, [Paddlefish Tagging Data].new_recap, [Paddlefish Tagging Data].transmitter, [Paddlefish Tagging Data].sex FROM [Paddlefish Tagging Data];")
-taggingData<-sqlFetch(comm,"qry-capture-data")
+taggingData<- sqlQuery(comm,"SELECT [Paddlefish Tagging Data].ID, [Paddlefish Tagging Data].Date, [Paddlefish Tagging Data].set AS set_number, [Paddlefish Tagging Data].tl, [Paddlefish Tagging Data].rfl, [Paddlefish Tagging Data].efl, [Paddlefish Tagging Data].girth, [Paddlefish Tagging Data].floy_color, [Paddlefish Tagging Data].floy_number, [Paddlefish Tagging Data].weight, [Paddlefish Tagging Data].pit, [Paddlefish Tagging Data].new_recap, [Paddlefish Tagging Data].transmitter, [Paddlefish Tagging Data].sex, [Paddlefish Tagging Data].transmitter_long FROM [Paddlefish Tagging Data]; ")
 taggingData$year<- format(taggingData$Date,"%Y")
 taggingData$doy<- as.numeric(as.character(format(taggingData$Date,"%j")))
 ## ASSIGN OCCASSION ID TO MASTER CAPTURE RECAPTURE DATASET
@@ -55,17 +59,16 @@ tmp$tmp<-1
 ch<-reshape2::dcast(tmp,pit~secid,value.var="tmp",sum,
     drop=FALSE)
 
-## BUNDLE UP DATA FOR JAGS
+# BUNDLE UP DATA FOR JAGS
 
-# SET UP DATA TO RUN THE RD
 dat<-list() 
+
 ## SCALAR; NUMBER OF DAYS
 dat$D<-as.integer(max(effort$date)-(min(effort$date)-1))
 ## VECTOR; DAY OF SAMPLING
 dat$int_str<-sort(unique(effort$date-(min(effort$date)-1)))
 ## VECTOR; DAY BEFORE NEXT SAMPLING
 dat$int_end<-dat$int_str[-1]-1
-
 ## MATRIX; CAPTURE HISTORIES, IND FISH
 dat$ch<-ch[,-1]
 dat$ch[dat$ch>1]<-1 ## some fish have replicate length/weight data
@@ -76,7 +79,6 @@ dat$nprim<-max(effort$occasionId)
 dat$M<-nrow(dat$ch)
 ## SCALAR; NUMBER OF SECONDARY OCCASIONS
 dat$nocc<-ncol(dat$ch)    
-
 ## MATRIX; DAILY COVARIATE
 dat$X<-rep(1,dat$D)
 
@@ -88,21 +90,9 @@ dat$X<-rep(1,dat$D)
 #
 #######################################################################
 
-setwd("C:/Users/Chelsea/Desktop")
-library(RODBC)
-library(lubridate)
-library(plyr)
-library(date)
-library(zoo)
-library(reshape2)
-
-## Database
-com<-odbcDriverConnect("Driver={Microsoft Access Driver (*.mdb, *.accdb)};DBQ=C:/Users/Chelsea/Desktop/Paddlefish Database.accdb")
-      #odbcClose(com)
-
 ############# OKTOC SPILLWAY STAGE LOGGER (SN: 10868627) ############
+OktocSpillway<-sqlFetch(comm,"Temp & Stage Query",as.is=TRUE)
 
-OktocSpillway<-sqlFetch(com,"Temp & Stage Query",as.is=TRUE)
 
 stage.dat<-na.omit(subset(OktocSpillway, Serial_Number==10868627)) 
 stage.dat$Date1<-ymd_hms(stage.dat$Date) 
@@ -139,3 +129,5 @@ stage.dat$day<-as.numeric(format(stage.dat$Date1, "%d"))
 # final merged with temp & stage dataset
 alldat<-merge(Oktoc.Stage,Oktoc.TempC, by=c("date"),all=TRUE) 
 alldat<-alldat[order(alldat$date),] 
+
+

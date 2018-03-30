@@ -79,4 +79,17 @@ if(n==2)
         text(-88.7,33.38,"N",pos=1)
         
         }
+    if(n==5)
+        {
+                
+        plot(TempC~dt,stageTemp,subset=Site_ID=="Oktoc Spillway",type='l')
+
+        plot(SensorDepthM~dt,stageTemp,subset=Site_ID=="Oktoc Spillway",type='l',ylim=c(0,10))
+        points(SensorDepthM~dt,stageTemp,subset=Site_ID=="Mid-Oktoc Stage",type='l')
+        points(SensorDepthM~dt,stageTemp,subset=Site_ID=="Roberts Road",type='l',col='red')
+        points(SensorDepthM~dt,stageTemp,subset=Site_ID=="Beer Bottle Tree",type='l',col='red')
+        points(SensorDepthM~dt,stageTemp,subset=Site_ID=="Oktoc Spillway",type='l',col='red')
+
+                
+        }
 }
