@@ -1,0 +1,160 @@
+---
+title: "Paddlefish Population Estimation: Robust Design"
+date: "`r format(Sys.Date())`"
+output:
+  html_document
+---
+
+
+<!--
+rmarkdown::render("index.Rmd")
+to do:
+1. make matrix of availability for capture... or assign states to acoustic fish
+-->
+
+stuff
+
+```{r,echo=FALSE, eval=FALSE}
+source("_R/1_global.R")  	
+source("_R/2_functions.R")         
+#source("_R/3_load.R")     
+source("_R/3_load-PIT.R")     
+#source("_R/3_load-acoustic.R")     
+source("_R/5_tables.R") 
+source("_R/6_figures.R")  
+
+
+
+
+
+mod_RD<- function()
+	{
+        
+	###################################################################	
+	# PRIORS
+    ###################################################################
+    lo_omega~dnorm(0,0.37)# INCLUSION PROBABILITY (LOG ODDS)
+    lo_gamma~dnorm(0,0.37)# PROBABLITY OF MOVING  (LOG ODDS)
+    lo_phi~dnorm(0,0.37) # log odds phi
+    lo_p~dnorm(0,0.37) # log odds p
+        
+    for(d in 1:10)
+        {        
+        logit(omega[d])<- lo_omega
+        logit(S[d])<- lo_phi
+        logit(gammaPrime[d])<- lo_gamma
+        logit(gammaPrimePrime[d])<- lo_gamma
+        logit(p[d])<-lo_p
+        lambda[d] <- (1-gammaPrime[d])/(gammaPrimePrime[d]-gammaPrime[d]+1) 
+        }
+
+    for(k in 1:10)
+        {
+        #alive_i[i,t_] <- step(z[i,t_]-3) # check alive or not
+        #Nin_i[i,t_] <- equals(z[i,t_],4) # count if i is within study area
+        
+        # recruitment process from 'eigenvector decomposition'
+        # recruitment ratio, or long-term prob of being inside     
+
+        
+        # TRANSITION MATRIX
+        # 1 =not yet in population;2=dead;3=offsite;4=onsite (only observable state)
+        # transition are from the column --> rows
+
+        tmat[1,1,k]<- 1-omega[k] # not in population yet
+        tmat[2,1,k]<- 0
+        tmat[3,1,k]<- omega[k]*lambda[k]
+        tmat[4,1,k]<- omega[k]*(1-lambda[k])
+        
+        # DEAD
+        tmat[1,2,k]<-0
+        tmat[2,2,k]<-1 # STAY DEAD
+        tmat[3,2,k]<-0
+        tmat[4,2,k]<-0
+        # OFFSITE
+        tmat[1,3,k]<-0
+        tmat[2,3,k]<-1-S[k] # DIES 
+        tmat[3,3,k]<-0.7#gammaPrime[k]*omega[k] # outside -> outside
+        tmat[4,3,k]<-0.7#(1-gammaPrime[k])*omega[k] # outside -> inside
+        # ONSITE
+        tmat[1,4,k]<- 0
+        tmat[2,4,k]<- 1-S[k]
+        tmat[3,4,k]<- gammaPrimePrime[k]*omega[k] # inside -> outside
+        tmat[4,4,k]<- (1-gammaPrimePrime[k])*omega[k] # inside-> inside
+        }
+
+
+    ###################################################################
+    # THE MODEL    
+    ###################################################################    
+    for(m in 1:M)
+        {
+        z[m,1]~ dcat(tmat[1:4,1,1]) 
+        for(j in 1:T2[1])
+            {
+            y[m,j,1] ~ dbern(p[1]*equals(z[m,1],4)) 
+            }    
+        for(i in 2:T)
+            {
+            z[m,i] ~ dcat(tmat[1:4, z[m,i-1],i])
+            for(j in 1:T2[i])
+                {
+                y[m,j,i] ~ dbern(p[i]*equals(z[m,i],4)) 
+                } 
+            }
+        }        
+    }
+   
+
+
+
+
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	
+```{r,eval=FALSE}
+source("./R/7_analysis.R")
+```	
+
+
+
+```{r,echo=FALSE, eval=FALSE}
+par(oma=c(0,0,0,0),mar=c(3,3,0.25,1))
+figures(1)
+figures(2)
+```
+   
+## Appendix
+
+BUGs model used to estimate abundance using auxiliary information
+from acoustically tagged fish.
+```{r,echo=FALSE}
+print(mod)
+```

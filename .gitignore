@@ -16,7 +16,7 @@ PSPAP-Population-Assessment-Robust-Design/
 _data/
 _output/
 _photos/
-
+*.ffs_db
 *.neta
 *.sav
 *.jpg

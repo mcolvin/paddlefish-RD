@@ -1,0 +1,24 @@
+---
+title: "Jags Robust Design Verification"
+author: M.E. Colvin
+date: 2017-07-26
+output:
+  html_document
+bibliography: ref.bib
+csl: ecology.csl  
+---
+
+<!--
+rmarkdown::render("Jags-RD-verification.Rmd",
+     output_dir = "./docs")
+-->
+
+
+
+```{r,echo=FALSE, eval=FALSE}
+source("_R/1_global.R")  	
+source("_R/2_functions.R")         
+source("_R/3_load.R")     
+source("_R/5_tables.R") 
+source("_R/6_figures.R")  
+```

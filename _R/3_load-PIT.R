@@ -7,14 +7,14 @@
 # TRASMITTTER %IN% C(11532,11529)
 # pit==1005085830
 
-dat<-list()
+
 
 #######################################################################
 #
 # COM TO DBASE
 #
 #######################################################################
-
+library(RODBC)
 comm<- odbcConnectAccess2007("C:/Users/mcolvin/Documents/projects/Paddlefish/analysis/data/Paddlefish Database.accdb")
 
 #######################################################################
@@ -28,7 +28,7 @@ effort<- sqlFetch(comm,"qry-effort-data")
 ## FORMAT AND CLEAN UP EFFORT DATA
 effort$doy<-as.numeric(format(effort$date, "%j"))
 effort$year<-as.numeric(format(effort$date, "%Y"))
-
+effort$date<-as.Date(effort$date)
 ## FORMATTING INDICES
 effort<- effort[order(effort$date, effort$set_number),]
 #effort$sample<- paste(effort$year,effort$doy
@@ -55,10 +55,87 @@ tmp$tmp<-1
 ch<-reshape2::dcast(tmp,pit~secid,value.var="tmp",sum,
     drop=FALSE)
 
+## BUNDLE UP DATA FOR JAGS
+
+# SET UP DATA TO RUN THE RD
+dat<-list() 
+## SCALAR; NUMBER OF DAYS
+dat$D<-as.integer(max(effort$date)-(min(effort$date)-1))
+## VECTOR; DAY OF SAMPLING
+dat$int_str<-sort(unique(effort$date-(min(effort$date)-1)))
+## VECTOR; DAY BEFORE NEXT SAMPLING
+dat$int_end<-dat$int_str[-1]-1
+
+## MATRIX; CAPTURE HISTORIES, IND FISH
 dat$ch<-ch[,-1]
 dat$ch[dat$ch>1]<-1 ## some fish have replicate length/weight data
-dat$occasionId<-effort$occasionId
+dat$secid<-effort$occasionId
+## SCALAR; NUMBER OF PRIMARY OCCASIONS
 dat$nprim<-max(effort$occasionId)
-dat$T<-ncol(dat$ch)
+## SCALAR; NUMBER OF TAGGED FISH
 dat$M<-nrow(dat$ch)
+## SCALAR; NUMBER OF SECONDARY OCCASIONS
+dat$nocc<-ncol(dat$ch)    
+
+## MATRIX; DAILY COVARIATE
+dat$X<-rep(1,dat$D)
+
+
+
+#######################################################################
+#
+#  LOAD COVARIATES
+#
+#######################################################################
+
+setwd("C:/Users/Chelsea/Desktop")
+library(RODBC)
+library(lubridate)
+library(plyr)
+library(date)
+library(zoo)
+library(reshape2)
+
+## Database
+com<-odbcDriverConnect("Driver={Microsoft Access Driver (*.mdb, *.accdb)};DBQ=C:/Users/Chelsea/Desktop/Paddlefish Database.accdb")
+      #odbcClose(com)
+
+############# OKTOC SPILLWAY STAGE LOGGER (SN: 10868627) ############
+
+OktocSpillway<-sqlFetch(com,"Temp & Stage Query",as.is=TRUE)
+
+stage.dat<-na.omit(subset(OktocSpillway, Serial_Number==10868627)) 
+stage.dat$Date1<-ymd_hms(stage.dat$Date) 
+stage.dat$Oktocstage<-as.numeric(stage.dat$SensorDepthM) 
+
+stage.dat$year<-as.numeric(format(stage.dat$Date1, "%Y"))
+stage.dat$month<-as.numeric(format(stage.dat$Date1, "%m"))
+stage.dat$day<-as.numeric(format(stage.dat$Date1, "%d"))
+
+
+## Stage Data
+    Oktoc.Stage<-aggregate(Oktocstage~year+month+day,stage.dat,mean)
+    Oktoc.Stage<-Oktoc.Stage[order(Oktoc.Stage$year,Oktoc.Stage$month,Oktoc.Stage$day),] 
+    Oktoc.Stage<-Oktoc.Stage[order(Oktoc.Stage$year,Oktoc.Stage$month,Oktoc.Stage$day),] 
+    Oktoc.Stage$date<-as.POSIXct(paste(Oktoc.Stage$year,Oktoc.Stage$month,Oktoc.Stage$day, sep='-'))
     
+
+## Temperature Data
+    temp.dat<-subset(OktocSpillway, Serial_Number==10760997)
+    
+    temp.dat$Date1<-ymd_hms(temp.dat$Date) 
+    temp.dat$temp.dat<-as.numeric(temp.dat$TempC) 
+    
+    temp.dat$year<-as.numeric(format(temp.dat$Date1, "%Y"))
+    temp.dat$month<-as.numeric(format(temp.dat$Date1, "%m"))
+    temp.dat$day<-as.numeric(format(temp.dat$Date1, "%d"))
+    
+    Oktoc.TempC<-aggregate(TempC~year+month+day,temp.dat,mean)
+    Oktoc.TempC<-Oktoc.TempC[order(Oktoc.TempC$year,Oktoc.TempC$month,Oktoc.TempC$day),]
+    Oktoc.TempC$date<-as.POSIXct(paste(Oktoc.TempC$year,Oktoc.TempC$month,Oktoc.TempC$day, sep='-'))
+    Oktoc.TempC<-subset(Oktoc.TempC, select=-c(year,month,day)) ## final Temp dataset
+
+
+# final merged with temp & stage dataset
+alldat<-merge(Oktoc.Stage,Oktoc.TempC, by=c("date"),all=TRUE) 
+alldat<-alldat[order(alldat$date),] 
