@@ -5,3 +5,8 @@ library(reshape2)
 library(plyr)
 library(lattice)
 library(RMark);cleanup(ask=FALSE)
+
+library(sp)
+library(rgdal)
+library(maps)
+library(maptools)
