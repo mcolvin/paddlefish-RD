@@ -1,0 +1,996 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<metadata xml:lang="en">
+	<mdLang>
+		<languageCode value="eng"/>
+		<countryCode value="USA"/>
+	</mdLang>
+	<mdChar>
+		<CharSetCd value="004"/>
+	</mdChar>
+	<mdHrLv>
+		<ScopeCd value="005"/>
+	</mdHrLv>
+	<mdContact>
+		<rpPosName>Chief Cartographer</rpPosName>
+		<rpCntInfo>
+			<cntPhone>
+				<voiceNum tddtty="">(703) 358-2404</voiceNum>
+				<faxNum>(703) 358-2223</faxNum>
+			</cntPhone>
+			<cntAddress addressType="both">
+				<delPoint>US Fish and Wildlife Service, Division of Realty, 4401 N. Fairfax Drive, Room 622</delPoint>
+				<city>Arlington</city>
+				<adminArea>VA</adminArea>
+				<postCode>22203</postCode>
+				<eMailAdd>CDWG@fws.gov</eMailAdd>
+			</cntAddress>
+		</rpCntInfo>
+		<role>
+			<RoleCd value="007"/>
+		</role>
+		<rpOrgName>U.S. Fish and Wildlife Service, Division of Realty</rpOrgName>
+	</mdContact>
+	<mdDateSt>20150316</mdDateSt>
+	<distInfo>
+		<distributor>
+			<distorCont>
+				<rpIndName>USFWS Chief Cartographer</rpIndName>
+				<rpOrgName>US Fish and Wildlife Service</rpOrgName>
+				<rpPosName>Chief Cartographer</rpPosName>
+				<rpCntInfo>
+					<cntPhone>
+						<voiceNum>(703) 358-2404</voiceNum>
+						<faxNum>(703) 358-2223</faxNum>
+					</cntPhone>
+					<cntAddress>
+						<delPoint>US Fish and Wildlife Service, Division of Realty, 4401 N. Fairfax Drive, Room 622</delPoint>
+						<city>Arlington</city>
+						<adminArea>VA</adminArea>
+						<postCode>22203</postCode>
+						<eMailAdd>CDWG@fws.gov</eMailAdd>
+					</cntAddress>
+				</rpCntInfo>
+				<role>
+					<RoleCd value="005"/>
+				</role>
+			</distorCont>
+			<distorOrdPrc>
+				<resFees>None</resFees>
+			</distorOrdPrc>
+			<distorFormat>
+				<formatName>ARCE</formatName>
+				<formatVer>unknown</formatVer>
+				<fileDecmTech>no compression applied</fileDecmTech>
+			</distorFormat>
+			<distorTran>
+				<transSize>0.034</transSize>
+			</distorTran>
+			<distorTran>
+				<onLineSrc>
+					<orDesc>USFWS cadastral data</orDesc>
+				</onLineSrc>
+			</distorTran>
+		</distributor>
+		<distFormat>
+			<formatName>File Geodatabase Feature Class</formatName>
+		</distFormat>
+	</distInfo>
+	<dataIdInfo>
+		<idCitation>
+			<resTitle>United States Fish &amp; Wildlife Service Cadastral Geodatabase - FwsInterest</resTitle>
+			<date>
+				<pubDate>2015-03-16T00:00:00</pubDate>
+			</date>
+			<citRespParty>
+				<rpOrgName>US Fish and Wildlife Service</rpOrgName>
+				<role>
+					<RoleCd value="010"/>
+				</role>
+			</citRespParty>
+			<citRespParty>
+				<rpOrgName>United States Fish and Wildlife Service</rpOrgName>
+				<role>
+					<RoleCd value="006"/>
+				</role>
+			</citRespParty>
+			<presForm>
+				<PresFormCd value="005"/>
+				<fgdcGeoform>vector digital data</fgdcGeoform>
+			</presForm>
+			<datasetSeries>
+				<seriesName>National Wildlife Refuge Boundary and Parcel Data</seriesName>
+				<issId>National geodatabase</issId>
+			</datasetSeries>
+		</idCitation>
+		<idAbs>&lt;DIV STYLE="text-align:Left;"&gt;&lt;DIV&gt;&lt;DIV&gt;&lt;P&gt;&lt;SPAN&gt;This data layer depicts lands and waters administered by the U.S. Fish and Wildlife Service (USFWS) in North America, U.S. Trust Territories and Possessions. It may also include inholdings that are not administered by USFWS. The primary source for this information is the USFWS Realty program.&lt;/SPAN&gt;&lt;/P&gt;&lt;/DIV&gt;&lt;/DIV&gt;&lt;/DIV&gt;</idAbs>
+		<idPurp>The intended application of this data layer is as a cadastral framework for use with other data layers in GIS and mapping applications. It is specifically not intended to be used as a land survey or representation of land for conveyance or tax purposes.</idPurp>
+		<idStatus>
+			<ProgCd value="001"/>
+		</idStatus>
+		<idPoC>
+			<rpIndName>USFWS Chief Cartographer</rpIndName>
+			<rpOrgName>US Fish and Wildlife Service</rpOrgName>
+			<rpPosName>Chief Cartographer</rpPosName>
+			<rpCntInfo>
+				<cntPhone>
+					<voiceNum tddtty="">(703) 358-2404</voiceNum>
+					<faxNum>(703) 358-2223</faxNum>
+				</cntPhone>
+				<cntAddress addressType="both">
+					<delPoint>US Fish and Wildlife Service, Division of Realty, 4401 N. Fairfax Drive, Room 622</delPoint>
+					<city>Arlington</city>
+					<adminArea>VA</adminArea>
+					<postCode>22203</postCode>
+					<eMailAdd>CDWG@fws.gov</eMailAdd>
+				</cntAddress>
+			</rpCntInfo>
+			<role>
+				<RoleCd value="007"/>
+			</role>
+		</idPoC>
+		<resMaint>
+			<maintFreq>
+				<MaintFreqCd value="009"/>
+			</maintFreq>
+		</resMaint>
+		<placeKeys>
+			<keyword>United States</keyword>
+			<keyword>National Wildlife Refuge</keyword>
+		</placeKeys>
+		<searchKeys>
+			<keyword>United States</keyword>
+			<keyword>National Wildlife Refuge</keyword>
+		</searchKeys>
+		<spatRpType>
+			<SpatRepTypCd value="001"/>
+		</spatRpType>
+		<dataLang>
+			<languageCode value="eng"/>
+			<countryCode value="USA"/>
+		</dataLang>
+		<envirDesc>Microsoft Windows XP Version 5.1 (Build 2600) Service Pack 2; ESRI ArcCatalog 9.3.1.1850</envirDesc>
+		<dataExt>
+			<exDesc>publication date</exDesc>
+			<tempEle>
+				<TempExtent>
+					<exTemp>
+						<TM_Instant gmlID="_3283b40bd0fc43a9cb286931218e34">
+							<tmPosition>2013-05-01T00:00:00</tmPosition>
+						</TM_Instant>
+					</exTemp>
+				</TempExtent>
+			</tempEle>
+		</dataExt>
+		<dataExt>
+			<geoEle>
+				<GeoBndBox>
+					<westBL>-179.147969</westBL>
+					<eastBL>179.772678</eastBL>
+					<southBL>-14.609461</southBL>
+					<northBL>70.329407</northBL>
+				</GeoBndBox>
+			</geoEle>
+		</dataExt>
+		<suppInfo>The FwsInterest feature class is an aggregated data layer derived by appending separate regional feature data sets into a single national set. The spatial and positional accuracy of this information will vary depending on the original source data and methods utilized. Data sources are not listed in this document but are maintained for each region and can be requested. We strive to improve the accuracy of this data and incorporate more reliable information when available.</suppInfo>
+		<dataExt>
+			<geoEle>
+				<GeoBndBox esriExtentType="search">
+					<exTypeCode>1</exTypeCode>
+					<westBL>-179.150067</westBL>
+					<eastBL>179.775127</eastBL>
+					<northBL>70.329407</northBL>
+					<southBL>-14.559753</southBL>
+				</GeoBndBox>
+			</geoEle>
+		</dataExt>
+		<idCredit>U.S. Fish and Wildlife Service, National Wildlife Refuge System, Division of Realty</idCredit>
+		<dataChar>
+			<CharSetCd value="004"/>
+		</dataChar>
+		<resConst>
+			<LegConsts>
+				<useLimit>Although these data and information have been processed successfully on a computer system at the U.S. Fish and Wildlife Service, USFWS, no warranty expressed or implied is made regarding the accuracy or utility of the data and information on any other system or for general or scientific purposes, nor shall the act of distribution constitute any such warranty. Inherent in any data set used to develop graphical representations are limitations of accuracy as determined by, among others, the source, scale and resolution of the data. This disclaimer applies both to individual use of the data and information, and aggregate use with other data and information. It is also strongly recommended that careful attention be paid to the contents of the metadata file associated with this data and information, and aggregate use with other data and information. The USFWS is not liable for the user’s improper or incorrect use of the data and information described and/or contained herein. These data and any derived products are not legal documents and are not intended to be used as such. The information contained in these data may be dynamic and could change over time. The data are not better than the original sources from which they are derived. It is the responsibility of the data user to use the data appropriately and consistent with the limitations of geospatial data in general and these data in particular. It is strongly recommended that the data described or contained herein be acquired directly from an authorized USFWS source and not indirectly through some other sources which may have changed the data in some way. The USFWS is not liable for data or information that indirectly acquired through other sources. No warranty expessed or implied is made regarding the accuracy or utility of the data on any other system or for general or scientific purposes, nor shall the act of distribution constitute any such warranty. It is also strongly recommended that careful attention be paid to the contents of the metadata file associated with these data to evaluate data set limitations, restrictions or intended use. The U.S. Fish and Wildlife Service shall not be held liable for improper or incorrect use of the data described and/or contained herein. </useLimit>
+			</LegConsts>
+		</resConst>
+		<resConst>
+			<Consts>
+				<useLimit>&lt;DIV STYLE="text-align:Left;"&gt;&lt;DIV&gt;&lt;DIV&gt;&lt;P&gt;&lt;SPAN&gt;This data layer was compiled for use with natural resource mapping and GIS applications. It is inappropriate to use these data for legal purposes.&lt;/SPAN&gt;&lt;/P&gt;&lt;/DIV&gt;&lt;/DIV&gt;&lt;/DIV&gt;</useLimit>
+			</Consts>
+		</resConst>
+		<tpCat>
+			<TopicCatCd value="015"/>
+		</tpCat>
+		<tpCat>
+			<TopicCatCd value="003"/>
+		</tpCat>
+	</dataIdInfo>
+	<dqInfo>
+		<dqScope>
+			<scpLvl>
+				<ScopeCd value="005"/>
+			</scpLvl>
+		</dqScope>
+		<report type="DQCompOm" dimension="">
+			<measDesc>FwsInterest is a dynamic data layer, updates and revisions are ongoing.</measDesc>
+		</report>
+		<report type="DQTopConsis" dimension="">
+			<evalMethDesc>Polygons are closed and adjusted to the most accurate geographic features, usually on a USGS 7.5' topographic quad.</evalMethDesc>
+		</report>
+		<report type="DQConcConsis" dimension="">
+			<measDesc>Polygons are closed and adjusted to the most accurate geographic features, usually on a USGS 7.5' topographic quad.</measDesc>
+		</report>
+		<report type="DQAbsExtPosAcc" dimension="">
+			<measDesc>This data layer has been verified against USGS 1:24,000-scale and 1:63,360-scale Digital Raster Graphics (DRGs) or 1:12,000-scale Digital Orthophoto Quarter Quads (DOQQs) where available. For some areas not covered by USGS, nautical charts from the National Oceanic and Atmospheric Administration are used.</measDesc>
+		</report>
+		<report type="DQQuanAttAcc" dimension="">
+			<measDesc>Up to three levels of quality-control review are conducted with corrections being incorporated after each review until the dataset is deemed acceptable. FwsInterest utilizes coded domains to limit coding errors.</measDesc>
+		</report>
+		<dataLineage>
+			<prcStep>
+				<stepDesc>Processes vary by region.</stepDesc>
+				<stepProc>
+					<rpIndName>USFWS Chief Cartographer</rpIndName>
+					<rpOrgName>US Fish and Wildlife Service</rpOrgName>
+					<rpPosName>Chief Cartographer</rpPosName>
+					<rpCntInfo>
+						<cntPhone>
+							<voiceNum>(703) 358-2404</voiceNum>
+							<faxNum>(703) 358-2223</faxNum>
+						</cntPhone>
+						<cntAddress>
+							<delPoint>US Fish and Wildlife Service, Division of Realty, 4401 N. Fairfax Drive, Room 622</delPoint>
+							<city>Arlington</city>
+							<adminArea>VA</adminArea>
+							<postCode>22203</postCode>
+							<eMailAdd>CDWG@fws.gov</eMailAdd>
+						</cntAddress>
+					</rpCntInfo>
+					<role>
+						<RoleCd value="009"/>
+					</role>
+				</stepProc>
+			</prcStep>
+			<dataSource type="">
+				<srcDesc>Spatial and attribute information</srcDesc>
+				<srcCitatn>
+					<resTitle>NWR Status Map</resTitle>
+					<resAltTitle>RE status map</resAltTitle>
+					<citRespParty>
+						<rpOrgName>USFWS, National Wildlife Refuge System</rpOrgName>
+						<role>
+							<RoleCd value="006"/>
+						</role>
+					</citRespParty>
+					<citRespParty>
+						<rpOrgName>US Fish and Wildlife Service</rpOrgName>
+						<role>
+							<RoleCd value="010"/>
+						</role>
+					</citRespParty>
+					<presForm>
+						<PresFormCd value="006"/>
+					</presForm>
+					<datasetSeries>
+						<seriesName>National Wildlife Refuge Status Maps</seriesName>
+						<issId>All National Wildlife Refuges</issId>
+					</datasetSeries>
+				</srcCitatn>
+				<srcExt>
+					<exDesc>publication date</exDesc>
+					<tempEle>
+						<TempExtent>
+							<exTemp>
+								<TM_Instant gmlID="_6e78d010fea24137b720a5c1956729"/>
+							</exTemp>
+						</TempExtent>
+					</tempEle>
+				</srcExt>
+			</dataSource>
+		</dataLineage>
+	</dqInfo>
+	<spatRepInfo>
+		<VectSpatRep>
+			<geometObjs>
+				<geoObjTyp>
+					<GeoObjTypCd value="002"/>
+				</geoObjTyp>
+				<geoObjCnt>45169</geoObjCnt>
+			</geometObjs>
+			<topLvl>
+				<TopoLevCd value="001"/>
+			</topLvl>
+		</VectSpatRep>
+	</spatRepInfo>
+	<mdHrLvName>dataset</mdHrLvName>
+	<refSysInfo>
+		<RefSystem>
+			<refSysID>
+				<identCode code="4269" value="4269"/>
+				<idCodeSpace>EPSG</idCodeSpace>
+				<idVersion>7.9.4</idVersion>
+			</refSysID>
+		</RefSystem>
+	</refSysInfo>
+	<eainfo>
+		<detailed>
+			<enttyp>
+				<enttypl>FWSInterest</enttypl>
+				<enttypd>US Fish &amp; Wildlife Service Interest - Nature of land ownership relative to the National Wildlife Refuge System.</enttypd>
+				<enttypds>USFWS Division of Realty</enttypds>
+			</enttyp>
+			<attr>
+				<attrlabl>OBJECTID</attrlabl>
+				<attrdef>Internal feature number.</attrdef>
+				<attrdefs>Esri</attrdefs>
+				<attrdomv>
+					<udom>Sequential unique whole numbers that are automatically generated.</udom>
+				</attrdomv>
+			</attr>
+			<attr>
+				<attrlabl>Shape</attrlabl>
+				<attrdef>Feature geometry.</attrdef>
+				<attrdefs>Esri</attrdefs>
+				<attrdomv>
+					<udom>Coordinates defining the features.</udom>
+				</attrdomv>
+			</attr>
+			<attr>
+				<attrlabl>CMPXNAME</attrlabl>
+				<attrdef>Complex Name - Name of a number of stations combined under one management structure</attrdef>
+				<attrdefs>USFWS National Wildlife Refuge System</attrdefs>
+				<attrdomv>
+					<udom>Regional National Wildlife Refuge Complex list</udom>
+				</attrdomv>
+			</attr>
+			<attr>
+				<attrlabl>ORGNAME</attrlabl>
+				<attrdef>Organization Name - Official name given to a Service organization that has been assigned an official five-digit numeric organization code by the Washington Office, Division of Financial Management</attrdef>
+				<attrdefs>USFWS Data Element Standard for Organization Name</attrdefs>
+				<attrdomv>
+					<udom>Master List of Official Names for FWS Land Units</udom>
+				</attrdomv>
+			</attr>
+			<attr>
+				<attrlabl>DIVNAME</attrlabl>
+				<attrdef>Division Name - Name given to a Service organization division</attrdef>
+				<attrdefs>USFWS Division of Realty</attrdefs>
+				<attrdomv>
+					<udom>Regional National Wildlife Refuge division list</udom>
+				</attrdomv>
+			</attr>
+			<attr>
+				<attrlabl>UNITNAME</attrlabl>
+				<attrdef>Unit Name - Name given to a Service unit of a specific National Wildlife Refuge</attrdef>
+				<attrdefs>USFWS Division of Realty</attrdefs>
+				<attrdomv>
+					<udom>Regional National Wildlife Refuge unit list</udom>
+				</attrdomv>
+			</attr>
+			<attr>
+				<attrlabl>SUBUNAME</attrlabl>
+				<attrdef>Subunit Name - Name given to a Service subunit of a specific National Wildlife Refuge</attrdef>
+				<attrdefs>USFWS Division of Realty</attrdefs>
+				<attrdomv>
+					<udom>Regional National Wildlife Refuge subunit list</udom>
+				</attrdomv>
+			</attr>
+			<attr>
+				<attrlabl>ORGCODE</attrlabl>
+				<attrdef>Organization Code - Unique five-digit numeric codes assigned by the Washington Office, Division of Financial Management, to Service organizations where personnel are assigned and all unstaffed land management units. Organization codes may also be assigned to meet an administrative requirement.</attrdef>
+				<attrdefs>USFWS Division of Financial Management</attrdefs>
+				<attrdomv>
+					<codesetd>
+						<codesetn>Master List of Organization Codes for FWS Land Units</codesetn>
+						<codesets>USFWS Division of Financial Management</codesets>
+					</codesetd>
+				</attrdomv>
+			</attr>
+			<attr>
+				<attrlabl>MGMTCODE</attrlabl>
+				<attrdef>The ORGCODE that reflects the actual managing station of a particular Service unit of the NWRS</attrdef>
+				<attrdefs>USFWS Division of Realty</attrdefs>
+				<attrdomv>
+					<codesetd>
+						<codesetn>Master List of Organization Codes for FWS Land Units</codesetn>
+						<codesets>USFWS Division of Financial Management</codesets>
+					</codesetd>
+				</attrdomv>
+			</attr>
+			<attr>
+				<attrlabl>IFWS</attrlabl>
+				<attrdef>Interior-USFWS number: unique 1-6 character code assigned by the Washington Office, Division of Realty, to each organizational unit, area, or project site over which the Service has some type of jurisdiction.</attrdef>
+				<attrdefs>USFWS Data Element Standard for IFWS Number</attrdefs>
+				<attrdomv>
+					<codesetd>
+						<codesetn>Master List of IFWS Numbers for FWS Land Units</codesetn>
+						<codesets>USFWS Division of Realty</codesets>
+					</codesetd>
+				</attrdomv>
+			</attr>
+			<attr>
+				<attrlabl>LIT</attrlabl>
+				<attrdef>Literals - Unique alpha codes assigned by the Washington Office, Division of Realty, that identify the organizational units, areas, and project sites on Service-owned lands.</attrdef>
+				<attrdefs>USFWS Data Element Standard for Literals</attrdefs>
+				<attrdomv>
+					<codesetd>
+						<codesetn>Master List of Literal Codes for FWS Land Units</codesetn>
+						<codesets>USFWS Division of Realty</codesets>
+					</codesetd>
+				</attrdomv>
+			</attr>
+			<attr>
+				<attrlabl>SWENR</attrlabl>
+				<attrdef>Business Entity Number from the DOI Financial and Business Management System (FBMS)</attrdef>
+				<attrdefs>USFWS Division of Financial Management</attrdefs>
+				<attrdomv>
+					<codesetd>
+						<codesetn>Busness Entity Number</codesetn>
+						<codesets>USFWS Division of Financial Management</codesets>
+					</codesetd>
+				</attrdomv>
+			</attr>
+			<attr>
+				<attrlabl>SGRNR</attrlabl>
+				<attrdef>Financial and Business Management System (FBMS) Land Parcel Number</attrdef>
+				<attrdefs>USFWS Division of Financial Management</attrdefs>
+				<attrdomv>
+					<codesetd>
+						<codesetn>Financial and Business Management System (FBMS) Land Parcel Number</codesetn>
+						<codesets>USFWS Division of Financial Management</codesets>
+					</codesetd>
+				</attrdomv>
+			</attr>
+			<attr>
+				<attrlabl>GISACRES</attrlabl>
+				<attrdef>Geographic Information System Acres - Acres calculated by GIS software for each polygon</attrdef>
+				<attrdefs>USFWS Division of Realty</attrdefs>
+				<attrdomv>
+					<udom>Positive real numbers that are automatically generated.</udom>
+				</attrdomv>
+			</attr>
+			<attr>
+				<attrlabl>DOCACRES</attrlabl>
+				<attrdef>Document Acres - Acres indicated in deed or other official document</attrdef>
+				<attrdefs>USFWS Division of Realty</attrdefs>
+				<attrdomv>
+					<udom>Positive real numbers that are derived from deed or other official document.</udom>
+				</attrdomv>
+			</attr>
+			<attr>
+				<attrlabl>SURACRES</attrlabl>
+				<attrdef>Survey Acres - Acres determined by survey</attrdef>
+				<attrdefs>USFWS Division of Realty</attrdefs>
+				<attrdomv>
+					<udom>Positive real numbers that are derived from survey document.</udom>
+				</attrdomv>
+			</attr>
+			<attr>
+				<attrlabl>STATUS</attrlabl>
+				<attrdef>The current status of USFWS management pertaining to a parcel of a land or water, and whether the parcel is owned and/or managed by the USFWS (Acquired) or is owned and/or managed by another party (Inholding).</attrdef>
+				<attrdefs>USFWS Division of Realty</attrdefs>
+				<attrdomv>
+					<edom>
+						<edomv>Inholding or "1"</edomv>
+						<edomvd>Inholding - Lands within the approved acquisition boundary for which the FWS has yet to acquire an interest.</edomvd>
+						<edomvds>USFWS Division of Realty</edomvds>
+					</edom>
+				</attrdomv>
+				<attrdomv>
+					<edom>
+						<edomv>Acquired or "0"</edomv>
+						<edomvd>Acquired - Parcel for which FWS has fee or less than fee interest.</edomvd>
+						<edomvds>USFWS Division of Realty</edomvds>
+					</edom>
+				</attrdomv>
+			</attr>
+			<attr>
+				<attrlabl>INTTYPE1</attrlabl>
+				<attrdef>Interest Type 1 - the primary real property interest (land or water) held by the USFWS.</attrdef>
+				<attrdefs>USFWS Division of Realty</attrdefs>
+				<attrdomv>
+					<edom>
+						<edomv>S</edomv>
+						<edomvd>Secondary - area of land where USFWS holds secondary interest to another federal agency(ies)</edomvd>
+						<edomvds>USFWS Division of Realty</edomvds>
+					</edom>
+				</attrdomv>
+				<attrdomv>
+					<edom>
+						<edomv>O</edomv>
+						<edomvd>Fee - Lands owned in Fee by the United States where the Service is the primary administering agency.</edomvd>
+						<edomvds>USFWS Division of Realty</edomvds>
+					</edom>
+				</attrdomv>
+			</attr>
+			<attr>
+				<attrlabl>INTTYPE2</attrlabl>
+				<attrdef>Interest Type 2 - The secondary real property interest (land or water) held by the FWS.</attrdef>
+				<attrdefs>USFWS Division of Realty</attrdefs>
+				<attrdomv>
+					<edom>
+						<edomv>WD</edomv>
+						<edomvd>Ditch, Canal or Culvert</edomvd>
+						<edomvds>USFWS Division of Realty</edomvds>
+					</edom>
+				</attrdomv>
+				<attrdomv>
+					<edom>
+						<edomv>W</edomv>
+						<edomvd>Water</edomvd>
+						<edomvds>USFWS Division of Realty</edomvds>
+					</edom>
+				</attrdomv>
+				<attrdomv>
+					<edom>
+						<edomv>X</edomv>
+						<edomvd>Wetlands</edomvd>
+						<edomvds>USFWS Division of Realty</edomvds>
+					</edom>
+				</attrdomv>
+				<attrdomv>
+					<edom>
+						<edomv>XT</edomv>
+						<edomvd>Timber in exchange for FWS receiving title to land</edomvd>
+						<edomvds>USFWS Division of Realty</edomvds>
+					</edom>
+				</attrdomv>
+				<attrdomv>
+					<edom>
+						<edomv>R</edomv>
+						<edomvd>Roads</edomvd>
+						<edomvds>USFWS Division of Realty</edomvds>
+					</edom>
+				</attrdomv>
+				<attrdomv>
+					<edom>
+						<edomv>TR</edomv>
+						<edomvd>Trails</edomvd>
+						<edomvds>USFWS Division of Realty</edomvds>
+					</edom>
+				</attrdomv>
+				<attrdomv>
+					<edom>
+						<edomv>N/A</edomv>
+						<edomvd>Not applicable</edomvd>
+						<edomvds>USFWS Division of Realty</edomvds>
+					</edom>
+				</attrdomv>
+			</attr>
+			<attr>
+				<attrlabl>TRACTNO</attrlabl>
+				<attrdef>Tract Number - Number assigned to each tract</attrdef>
+				<attrdefs>USFWS Division of Realty</attrdefs>
+				<attrdomv>
+					<udom>Unique numeric and alpha codes generated for each tract by USFWS Realty</udom>
+				</attrdomv>
+			</attr>
+			<attr>
+				<attrlabl>COMMENTS</attrlabl>
+				<attrdef>Comments - Additional information</attrdef>
+				<attrdefs>USFWS Division of Realty</attrdefs>
+				<attrdomv>
+					<udom>Unique note for each tract when necessary</udom>
+				</attrdomv>
+			</attr>
+			<attr>
+				<attrlabl>RELICODE</attrlabl>
+				<attrdef>Tract Line Reliability Code</attrdef>
+				<attrdefs>USFWS Division of Realty</attrdefs>
+				<attrdomv>
+					<edom>
+						<edomv>P1 FWS RLS Surv Std Coord</edomv>
+						<edomvd>Primary Reliability - Geometry extracted from a FWS survey or FWS contracted survey; referencing a standard coordinate system/datum; accepted by the Regional Land Surveyor</edomvd>
+						<edomvds>USFWS Division of Realty</edomvds>
+					</edom>
+				</attrdomv>
+				<attrdomv>
+					<edom>
+						<edomv>P2 FWS RLS Surv Trans Best Avail Ctrl</edomv>
+						<edomvd>Primary Reliability - Geometry extracted from a FWS survey or FWS contracted survey; referencing an unknown or local coordinate system/datum; accepted by the Regional Land Surveyor; moved and rotated into a standard coordinate system using the best available control source</edomvd>
+						<edomvds>USFWS Division of Realty</edomvds>
+					</edom>
+				</attrdomv>
+				<attrdomv>
+					<edom>
+						<edomv>P3 FWS QT LD Closes Trans Best Avail Ctrl</edomv>
+						<edomvd>Primary Reliability - Geometry created by a qualified technician from a FWS report of survey, legal description or survey notes; closes within an acceptable tolerance; moved and rotated into a standard coordinate system using the best available control source</edomvd>
+						<edomvds>USFWS Division of Realty</edomvds>
+					</edom>
+				</attrdomv>
+				<attrdomv>
+					<edom>
+						<edomv>S1 GCDB CADNSDI</edomv>
+						<edomvd>Secondary Reliability - Geometry extracted directly from GCDB (Geographic Coordinate Database) or CADNSDI PLSS</edomvd>
+						<edomvds>USFWS Division of Realty</edomvds>
+					</edom>
+				</attrdomv>
+				<attrdomv>
+					<edom>
+						<edomv>S2 USGS 1:24K DLG</edomv>
+						<edomvd>Secondary Reliability - Geometry extracted from USGS digital line graphs (1:24,000, DLG)</edomvd>
+						<edomvds>USFWS Division of Realty</edomvds>
+					</edom>
+				</attrdomv>
+				<attrdomv>
+					<edom>
+						<edomv>S3 Aerial LiDAR 1:24K</edomv>
+						<edomvd>Secondary Reliability - Geometry digitized from digital ortho-photography, NAIP aerial imagery or LiDAR (1:24,000 or larger)</edomvd>
+						<edomvds>USFWS Division of Realty</edomvds>
+					</edom>
+				</attrdomv>
+				<attrdomv>
+					<edom>
+						<edomv>S4 USGS 1:24K DRG</edomv>
+						<edomvd>Secondary Reliability - Geometry digitized from existing FWS status maps</edomvd>
+						<edomvds>USFWS Division of Realty</edomvds>
+					</edom>
+				</attrdomv>
+				<attrdomv>
+					<edom>
+						<edomv>S5 Land Status</edomv>
+						<edomvd>Secondary Reliability - Geometry digitized from existing FWS status maps</edomvd>
+						<edomvds>USFWS Division of Realty</edomvds>
+					</edom>
+				</attrdomv>
+				<attrdomv>
+					<edom>
+						<edomv>S6 GLO</edomv>
+						<edomvd>Secondary Reliability - Geometry digitized from GLO plats</edomvd>
+						<edomvds>USFWS Division of Realty</edomvds>
+					</edom>
+				</attrdomv>
+				<attrdomv>
+					<edom>
+						<edomv>S7 Other Resource</edomv>
+						<edomvd>Secondary Reliability - Geometry digitized/extracted from other sources such as county tax lot data or maps, other agency status maps etc. with unknown spatial accuracy</edomvd>
+						<edomvds>USFWS Division of Realty</edomvds>
+					</edom>
+				</attrdomv>
+				<attrdomv>
+					<edom>
+						<edomv>Unknown</edomv>
+						<edomvd>Unknown</edomvd>
+						<edomvds>USFWS Division of Realty</edomvds>
+					</edom>
+				</attrdomv>
+			</attr>
+			<attr>
+				<attrlabl>INTIDNO</attrlabl>
+				<attrdef>Interest Identification Number - A concatenation of IFWS and TRACTNO that includes a period (.) separator</attrdef>
+				<attrdefs>USFWS Division of Realty</attrdefs>
+				<attrdomv>
+					<udom>Unique string derived by concatinating the IFWS and TRACTNO fields</udom>
+				</attrdomv>
+			</attr>
+			<attr>
+				<attrlabl>RSL_TYPE</attrlabl>
+				<attrdef>Organization Type - Administrative categories that identify Service organizations by their primary facility function, program activities, specialized duties and responsibilities, and/or operational status.</attrdef>
+				<attrdefs>USFWS Data Element Standard for Organization Type</attrdefs>
+				<attrdomv>
+					<edom>
+						<edomv>WRC</edomv>
+						<edomvd>Wildlife Research Center</edomvd>
+						<edomvds>USFWS Division of Realty</edomvds>
+					</edom>
+				</attrdomv>
+				<attrdomv>
+					<edom>
+						<edomv>FTC</edomv>
+						<edomvd>Fish Technology Center</edomvd>
+						<edomvds>USFWS Division of Realty</edomvds>
+					</edom>
+				</attrdomv>
+				<attrdomv>
+					<edom>
+						<edomv>NFH</edomv>
+						<edomvd>National Fish Hatchery</edomvd>
+						<edomvds>USFWS Division of Realty</edomvds>
+					</edom>
+				</attrdomv>
+				<attrdomv>
+					<edom>
+						<edomv>FR</edomv>
+						<edomvd>Fisheries Research Station</edomvd>
+						<edomvds>USFWS Division of Realty</edomvds>
+					</edom>
+				</attrdomv>
+				<attrdomv>
+					<edom>
+						<edomv>AS</edomv>
+						<edomvd>Administrative Site</edomvd>
+						<edomvds>USFWS Division of Realty</edomvds>
+					</edom>
+				</attrdomv>
+				<attrdomv>
+					<edom>
+						<edomv>WMA</edomv>
+						<edomvd>Wildlife Management Area</edomvd>
+						<edomvds>USFWS Division of Realty</edomvds>
+					</edom>
+				</attrdomv>
+				<attrdomv>
+					<edom>
+						<edomv>FSA</edomv>
+						<edomvd>Farm Service Administration</edomvd>
+						<edomvds>USFWS Division of Realty</edomvds>
+					</edom>
+				</attrdomv>
+				<attrdomv>
+					<edom>
+						<edomv>NWR</edomv>
+						<edomvd>National Wildlife Refuge</edomvd>
+						<edomvds>USFWS Division of Realty</edomvds>
+					</edom>
+				</attrdomv>
+				<attrdomv>
+					<edom>
+						<edomv>COORD</edomv>
+						<edomvd>Coordination Area</edomvd>
+						<edomvds>USFWS Division of Realty</edomvds>
+					</edom>
+				</attrdomv>
+				<attrdomv>
+					<edom>
+						<edomv>WPA</edomv>
+						<edomvd>Waterfowl Production Area</edomvd>
+						<edomvds>USFWS Division of Realty</edomvds>
+					</edom>
+				</attrdomv>
+			</attr>
+			<attr>
+				<attrlabl>FWSREGION</attrlabl>
+				<attrdef>FWS Region - Regional offices within the Service that have responsibility for program and/or administrative activities within a geographically-defined area</attrdef>
+				<attrdefs>USFWS Division of Realty</attrdefs>
+				<attrdomv>
+					<edom>
+						<edomv>Pacific Region or "1"</edomv>
+						<edomvd>Pacific Region, Region 1</edomvd>
+						<edomvds>USFWS Division of Realty</edomvds>
+					</edom>
+				</attrdomv>
+				<attrdomv>
+					<edom>
+						<edomv>Southwest or "2"</edomv>
+						<edomvd>Southwest Region, Region 2</edomvd>
+						<edomvds>USFWS Division of Realty</edomvds>
+					</edom>
+				</attrdomv>
+				<attrdomv>
+					<edom>
+						<edomv>Midwest Region or "3"</edomv>
+						<edomvd>Midwest Region or "3"</edomvd>
+						<edomvds>USFWS Division of Realty</edomvds>
+					</edom>
+				</attrdomv>
+				<attrdomv>
+					<edom>
+						<edomv>Southeast Region or "4"</edomv>
+						<edomvd>Southeast Region, Region 4</edomvd>
+						<edomvds>USFWS Division of Realty</edomvds>
+					</edom>
+				</attrdomv>
+				<attrdomv>
+					<edom>
+						<edomv>Northeast Region or "5"</edomv>
+						<edomvd>Northeast Region, Region 5</edomvd>
+						<edomvds>USFWS Division of Realty</edomvds>
+					</edom>
+				</attrdomv>
+				<attrdomv>
+					<edom>
+						<edomv>Mountain - Prairie Region or "6"</edomv>
+						<edomvd>Mountain - Prairie Region, Region 6</edomvd>
+						<edomvds>USFWS Division of Realty</edomvds>
+					</edom>
+				</attrdomv>
+				<attrdomv>
+					<edom>
+						<edomv>Alaska Region or "7"</edomv>
+						<edomvd>Alaska Region, Region 7</edomvd>
+						<edomvds>USFWS Division of Realty</edomvds>
+					</edom>
+				</attrdomv>
+				<attrdomv>
+					<edom>
+						<edomv>Pacific Southwest Region or "8"</edomv>
+						<edomvd>Pacific Southwest Region (California and Nevada), Region 8</edomvd>
+						<edomvds>USFWS Division of Realty</edomvds>
+					</edom>
+				</attrdomv>
+			</attr>
+			<attr>
+				<attrlabl>Shape_Length</attrlabl>
+				<attrdef>Length of feature in internal units.</attrdef>
+				<attrdefs>Esri</attrdefs>
+				<attrdomv>
+					<udom>Positive real numbers that are automatically generated.</udom>
+				</attrdomv>
+			</attr>
+			<attr>
+				<attrlabl>Shape_Area</attrlabl>
+				<attrdef>Area of feature in internal units squared.</attrdef>
+				<attrdefs>Esri</attrdefs>
+				<attrdomv>
+					<udom>Positive real numbers that are automatically generated.</udom>
+				</attrdomv>
+			</attr>
+		</detailed>
+	</eainfo>
+	<idinfo>
+		<keywords>
+			<theme>
+				<themekt>ISO 19115 Topic Category</themekt>
+				<themekey>boundaries</themekey>
+				<themekey>planningCadastre</themekey>
+			</theme>
+			<place>
+				<placekt>None</placekt>
+				<placekey>United States</placekey>
+			</place>
+			<theme>
+				<themekt>User</themekt>
+				<themekey>Wildlife Refuge</themekey>
+			</theme>
+			<theme>
+				<themekt>NGDA Portfolio Themes</themekt>
+				<themekey>National Geospatial Data Asset</themekey>
+				<themekey>NGDA</themekey>
+				<themekey>Cadastre Theme</themekey>
+			</theme>
+		</keywords>
+		<citation>
+			<citeinfo>
+				<origin>U.S. Fish and Wildlife Service</origin>
+				<title>FWSInterest</title>
+				<pubinfo>
+					<publish>U.S. Fish and Wildlife Service</publish>
+					<pubplace>Falls Church, VA</pubplace>
+				</pubinfo>
+				<pubdate>20150316</pubdate>
+			</citeinfo>
+		</citation>
+		<descript>
+			<abstract>This data layer depicts lands and waters administered by the U.S. Fish and Wildlife Service (USFWS) in North America, U.S. Trust Territories and Possessions. It may also include inholdings that are not administered by USFWS. The primary source for this information is the USFWS Realty program. </abstract>
+			<purpose>The intended application of this data layer is as a cadastral framework for use with other data layers in GIS and mapping applications. It is specifically not intended to be used as a land survey or representation of land for conveyance or tax purposes. </purpose>
+			<supplinf>The FwsInterest feature class is an aggregated data layer derived by appending separate regional feature data sets into a single national set. The spatial and positional accuracy of this information will vary depending on the original source data and methods utilized. Data sources are not listed in this document but are maintained for each region and can be requested. We strive to improve the accuracy of this data and incorporate more reliable information when available. </supplinf>
+		</descript>
+		<timeperd>
+			<current>Publication date</current>
+			<timeinfo>
+				<sngdate>
+					<caldate>20150316</caldate>
+				</sngdate>
+			</timeinfo>
+		</timeperd>
+		<status>
+			<progress>Complete</progress>
+			<update>As needed</update>
+		</status>
+		<spdom>
+			<bounding>
+				<westbc>-138.21454852</westbc>
+				<eastbc>-12.68151645</eastbc>
+				<northbc>61.7110157</northbc>
+				<southbc>6.65223303</southbc>
+			</bounding>
+		</spdom>
+		<accconst>None.</accconst>
+		<useconst>Although these data and information have been processed successfully on a computer system at the U.S. Fish and Wildlife Service, USFWS, no warranty expressed or implied is made regarding the accuracy or utility of the data and information on any other system or for general or scientific purposes, nor shall the act of distribution constitute any such warranty. Inherent in any data set used to develop graphical representations are limitations of accuracy as determined by, among others, the source, scale and resolution of the data. This disclaimer applies both to individual use of the data and information, and aggregate use with other data and information. It is also strongly recommended that careful attention be paid to the contents of the metadata file associated with this data and information, and aggregate use with other data and information. The USFWS is not liable for the user’s improper or incorrect use of the data and information described and/or contained herein. These data and any derived products are not legal documents and are not intended to be used as such. The information contained in these data may be dynamic and could change over time. The data are not better than the original sources from which they are derived. It is the responsibility of the data user to use the data appropriately and consistent with the limitations of geospatial data in general and these data in particular. It is strongly recommended that the data described or contained herein be acquired directly from an authorized USFWS source and not indirectly through some other sources which may have changed the data in some way. The USFWS is not liable for data or information that indirectly acquired through other sources.</useconst>
+		<secinfo>
+			<secsys>FIPS Pub 199</secsys>
+			<secclass>No Confidentiality</secclass>
+			<sechandl>Standard Technical Controls</sechandl>
+		</secinfo>
+		<ptcontac>
+			<cntinfo>
+				<cntorgp>
+					<cntorg>U.S. Fish and Wildlife Service, Division of Realty</cntorg>
+				</cntorgp>
+				<cntpos>Chief Cartographer</cntpos>
+				<cntaddr>
+					<addrtype>mailing and physical address</addrtype>
+					<address>5275 Leesburg Pike</address>
+					<city>Falls Church</city>
+					<state>VA</state>
+					<postal>22041</postal>
+				</cntaddr>
+				<cntvoice>(703) 358-2404</cntvoice>
+				<cntemail>CDWG@fws.gov</cntemail>
+			</cntinfo>
+		</ptcontac>
+	</idinfo>
+	<dataqual>
+		<logic>Tests for integrity have not been performed.</logic>
+		<complete>Features represented have not been tested for completeness</complete>
+		<posacc>
+			<horizpa>
+				<horizpar>Data were collected using methods that have unknown accuracy (EPA National Geospatial Data Policy [NGDP] Accuracy Tier 10). For more information, please see EPA's NGDP at http://epa.gov/geospatial/policies.html)</horizpar>
+			</horizpa>
+		</posacc>
+		<lineage>
+			<procstep>
+				<procdate>Unknown</procdate>
+				<procdesc>Processes vary by Region</procdesc>
+			</procstep>
+		</lineage>
+	</dataqual>
+	<spref>
+		<horizsys>
+			<geograph>
+				<latres>0.00000001</latres>
+				<longres>0.00000001</longres>
+				<geogunit>Decimal degrees</geogunit>
+			</geograph>
+			<geodetic>
+				<horizdn>North American Datum of 1983</horizdn>
+				<ellips>Geodetic Reference System 1980</ellips>
+				<semiaxis>6378137.000000</semiaxis>
+				<denflat>298.257222</denflat>
+			</geodetic>
+		</horizsys>
+	</spref>
+	<spdoinfo>
+		<direct>Vector</direct>
+		<ptvctinf/>
+	</spdoinfo>
+	<distinfo>
+		<resdesc>Downloadable Data</resdesc>
+		<distliab>Although these data and information have been processed successfully on a computer system at the USFWS, no warranty expressed or implied is made regarding the accuracy or utility of the data and information on any other system or for general or scientific purposes, nor shall the act of distribution constitute any such warranty. This disclaimer applies both to individual use of the data, and information, and aggregate use with other data and information. It is also strongly recommended that careful attention be paid to the contents of the metadata file associated with these data and information. The USFWS shall not be held liable for improper or incorrect use of the data and information described and/or contained herein.</distliab>
+		<distrib>
+			<cntinfo>
+				<cntorgp>
+					<cntorg>U.S. Fish and Wildlife Service, Division of Realty</cntorg>
+				</cntorgp>
+				<cntpos>Chief Cartographer</cntpos>
+				<cntaddr>
+					<addrtype>mailing and physical address</addrtype>
+					<address>5275 Leesburg Pike</address>
+					<city>Falls Church</city>
+					<state>VA</state>
+					<postal>22041</postal>
+				</cntaddr>
+				<cntvoice>(703) 358-2404</cntvoice>
+				<cntemail>CDWG@fws.gov</cntemail>
+			</cntinfo>
+		</distrib>
+	</distinfo>
+	<metainfo>
+		<metd>20150316</metd>
+		<metfrd>20190316</metfrd>
+		<metstdn>FGDC Content Standard for Digital Geospatial Metadata</metstdn>
+		<metstdv>FGDC-STD-001-1998</metstdv>
+		<metc>
+			<cntinfo>
+				<cntorgp>
+					<cntorg>U.S. Fish and Wildlife Service, Information Resource and Technology Management</cntorg>
+				</cntorgp>
+				<cntpos>National GIS Coordinator</cntpos>
+				<cntaddr>
+					<addrtype>mailing and physical address</addrtype>
+					<address>755 Parfet Street</address>
+					<address>Suite 250</address>
+					<city>Lakewood</city>
+					<state>CO</state>
+					<postal>80215</postal>
+				</cntaddr>
+				<cntvoice>(303) 275-2348</cntvoice>
+				<cntemail>FWS_GIS@fws.gov</cntemail>
+			</cntinfo>
+		</metc>
+	</metainfo>
+	<mdMaint>
+		<maintFreq>
+			<MaintFreqCd value="009"/>
+		</maintFreq>
+	</mdMaint>
+	<mdConst>
+		<LegConsts>
+			<useLimit>Although these data and information have been processed successfully on a computer system at the U.S. Fish and Wildlife Service, USFWS, no warranty expressed or implied is made regarding the accuracy or utility of the data and information on any other system or for general or scientific purposes, nor shall the act of distribution constitute any such warranty. Inherent in any data set used to develop graphical representations are limitations of accuracy as determined by, among others, the source, scale and resolution of the data. This disclaimer applies both to individual use of the data and information, and aggregate use with other data and information. It is also strongly recommended that careful attention be paid to the contents of the metadata file associated with this data and information, and aggregate use with other data and information. The USFWS is not liable for the user’s improper or incorrect use of the data and information described and/or contained herein. These data and any derived products are not legal documents and are not intended to be used as such. The information contained in these data may be dynamic and could change over time. The data are not better than the original sources from which they are derived. It is the responsibility of the data user to use the data appropriately and consistent with the limitations of geospatial data in general and these data in particular. It is strongly recommended that the data described or contained herein be acquired directly from an authorized USFWS source and not indirectly through some other sources which may have changed the data in some way. The USFWS is not liable for data or information that indirectly acquired through other sources. No warranty expessed or implied is made regarding the accuracy or utility of the data on any other system or for general or scientific purposes, nor shall the act of distribution constitute any such warranty. It is also strongly recommended that careful attention be paid to the contents of the metadata file associated with these data to evaluate data set limitations, restrictions or intended use. The U.S. Fish and Wildlife Service shall not be held liable for improper or incorrect use of the data described and/or contained herein. </useLimit>
+		</LegConsts>
+	</mdConst>
+	<mdConst>
+		<Consts>
+			<useLimit>&lt;DIV STYLE="text-align:Left;"&gt;&lt;DIV&gt;&lt;DIV&gt;&lt;P&gt;&lt;SPAN&gt;This data layer was compiled for use with natural resource mapping and GIS applications. It is inappropriate to use these data for legal purposes.&lt;/SPAN&gt;&lt;/P&gt;&lt;/DIV&gt;&lt;/DIV&gt;&lt;/DIV&gt;</useLimit>
+		</Consts>
+	</mdConst>
+	<Esri><CreaDate>20160526</CreaDate><CreaTime>11360300</CreaTime><ArcGISFormat>1.0</ArcGISFormat><SyncOnce>TRUE</SyncOnce><DataProperties><itemProps><itemLocation><linkage Sync="TRUE">file://\\WF-DW4QG12\C$\Users\mcolvin\Documents\ArcGIS\Default.gdb</linkage><protocol Sync="TRUE">Local Area Network</protocol></itemLocation></itemProps></DataProperties></Esri></metadata>

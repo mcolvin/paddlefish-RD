@@ -28,6 +28,7 @@ _photos/
 *.msi
 *.msm
 *.msp
+*.zip
 
 # OFFICE FILES
 *.xlsx
