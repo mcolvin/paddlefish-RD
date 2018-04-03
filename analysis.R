@@ -53,7 +53,7 @@ out <- R2jags::jags.parallel(data=dat,
 	n.thin=2,
 	working.directory=getwd())
 
-
+saveRDS(out, "_output/ests.RDS")
 
 
 
