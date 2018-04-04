@@ -57,3 +57,7 @@ saveRDS(out, "_output/ests.RDS")
 
 
 
+out<- readRDS("_output/ests.RDS")
+out$BUGSoutput$summary
+
+
