@@ -12,6 +12,41 @@ source("_R/4_tables.R")
 source("_R/5_figures.R")
 source("_R/6_models.R")
 
+library(R2jags)
+#######################################################################
+#
+#  MODEL 0
+#
+#######################################################################
+Z<-matrix(1,dat$M,dat$nprim)  # in or out of pool 
+qq<-rep(0,dat$nprim)   # pl  
+oo<-rep(0,dat$nprim)   # pl  
+inits<-function()
+    {list(Z=Z,qq=qq,oo=oo)}
+
+#  RUN MODEL AND TRACK ESTIMATES 
+out <- R2jags::jags.parallel(data=dat[c("ch","nprim","secid","M","nocc")],
+	inits=inits,
+	parameters=params,	
+	model.file=mod0,
+    export_obj_names=c("Z","qq","oo"),
+	n.chains = 3,	
+	n.iter = 150000,	
+	n.burnin = 60000, 
+	n.thin=2,
+	working.directory=getwd())
+
+saveRDS(out, "_output/ests-Mod0.RDS")
+
+
+
+out<- readRDS("_output/ests-Mod0.RDS")
+out$BUGSoutput$summary
+out$BUGSoutput$mean$Nhat
+
+matplot(t(out$BUGSoutput$mean$Nhat),type='l')
+
+
 
 
 #######################################################################
@@ -45,7 +80,7 @@ params<-c("gamma","a","b","Nhat","Ntype","lo_p",
 out <- R2jags::jags.parallel(data=dat,
 	inits=inits,
 	parameters=params,	
-	model.file=mod,
+	model.file=mod1,
     export_obj_names=c("Z","ZZ","qq","lo_G"),
 	n.chains = 3,	
 	n.iter = 150000,	
@@ -59,5 +94,9 @@ saveRDS(out, "_output/ests.RDS")
 
 out<- readRDS("_output/ests.RDS")
 out$BUGSoutput$summary
+out$BUGSoutput$mean$Nhat
+
+matplot(t(out$BUGSoutput$mean$Nhat),type='l')
+
 
 
