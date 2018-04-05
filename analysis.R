@@ -23,7 +23,7 @@ qq<-rep(0,dat$nprim)   # pl
 oo<-rep(0,dat$nprim)   # pl  
 inits<-function()
     {list(Z=Z,qq=qq,oo=oo)}
-
+params<- c("qq","oo","Z")
 #  RUN MODEL AND TRACK ESTIMATES 
 out <- R2jags::jags.parallel(data=dat[c("ch","nprim","secid","M","nocc")],
 	inits=inits,
