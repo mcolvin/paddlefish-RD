@@ -1,5 +1,14 @@
 mod0<-function()
     {
+    ## OBSERVATION MODEL     
+    for(o in 1:nocc)
+        {
+        for(m in 1:M)
+            {            
+            ch[m,o]~dbern(cap_prob[secid[o]]*Z[m,secid[o]])
+            }
+        }    
+    
     for(p in 1:nprim)
         {
         logit(cap_prob[p])<-qq[p]   
@@ -10,16 +19,6 @@ mod0<-function()
             }
         }    
             
-    ## OBSERVATION MODEL     
-    for(o in 1:nocc)
-        {
-        for(m in 1:M)
-            {            
-            ch[m,o]~dbern(cap_prob[secid[o]]*Z[m,secid[o]])
-            }
-        }
-    
-  
     ## PRIORS
     for(kk in 1:nprim)
         {
