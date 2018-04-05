@@ -25,14 +25,15 @@ inits<-function()
     {list(Z=Z,qq=qq,oo=oo)}
 params<- c("qq","oo","Z")
 #  RUN MODEL AND TRACK ESTIMATES 
+params<- c("qq","oo","Z")
 out <- R2jags::jags.parallel(data=dat[c("ch","nprim","secid","M","nocc")],
 	inits=inits,
 	parameters=params,	
 	model.file=mod0,
     export_obj_names=c("Z","qq","oo"),
 	n.chains = 3,	
-	n.iter = 150000,	
-	n.burnin = 60000, 
+	n.iter = 1500,	
+	n.burnin = 600, 
 	n.thin=2,
 	working.directory=getwd())
 
