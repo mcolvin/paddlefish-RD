@@ -107,9 +107,13 @@ meta$Implantation<-as.Date(meta$"Implantation Date")
  
 state_matrix<-state_matrix+1 
  
- state_matrix[state_matrix==-99]<-1
+state_matrix[state_matrix==-99]<-1
  
- 
+# 1=not tagged pr(capture)=0
+# 2=in pool pr(capture)=?
+# 3=outside pool pr(capture)=0
+# 4=physically moved pr(capture)=0 & gamma=1
+# 5=tag failed pr(capture)=0
  
  
 #######################################################################
