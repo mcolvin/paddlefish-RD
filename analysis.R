@@ -23,7 +23,7 @@ qq<-rep(0,dat$nprim)   # pl
 oo<-rep(0,dat$nprim)   # pl  
 inits<-function()
     {list(Z=Z,qq=qq,oo=oo)}
-
+params<- c("qq","oo","Z")
 #  RUN MODEL AND TRACK ESTIMATES 
 params<- c("qq","oo")
 ptm <- proc.time()
