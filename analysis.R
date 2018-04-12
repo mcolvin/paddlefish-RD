@@ -25,20 +25,23 @@ inits<-function()
     {list(Z=Z,qq=qq,oo=oo)}
 
 #  RUN MODEL AND TRACK ESTIMATES 
-params<- c("qq","oo","Z")
+params<- c("qq","oo")
+ptm <- proc.time()
 out <- R2jags::jags.parallel(data=dat[c("ch","nprim","secid","M","nocc")],
 	inits=inits,
 	parameters=params,	
 	model.file=mod0,
     export_obj_names=c("Z","qq","oo"),
 	n.chains = 3,	
-	n.iter = 1500,	
-	n.burnin = 600, 
+	n.iter = 50000,	
+	n.burnin = 25000, 
 	n.thin=2,
 	working.directory=getwd())
 
 saveRDS(out, "_output/ests-Mod0.RDS")
 
+
+ptm <- proc.time()-ptm
 
 
 out<- readRDS("_output/ests-Mod0.RDS")
