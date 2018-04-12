@@ -1,8 +1,36 @@
+mod0<-function()
+    {
+    ## OBSERVATION MODEL     
+    for(o in 1:nocc)
+        {
+        for(m in 1:M)
+            {            
+            ch[m,o]~dbern(cap_prob[secid[o]]*Z[m,secid[o]])
+            }
+        }    
+    
+    for(p in 1:nprim)
+        {
+        logit(cap_prob[p])<-qq[p]   
+        logit(omega[p])<-oo[p]         
+        for(ind in 1:M)
+            {
+            Z[ind,p]~dbern(omega[p])## WAS FISH INSIDE OR OUTSIDE
+            }
+        }    
+            
+    ## PRIORS
+    for(kk in 1:nprim)
+        {
+        qq[kk]~dnorm(0,0.37)## CAPTURE PROBABILITY 
+        oo[kk]~dnorm(0,0.37)## GAMMA        
+        }
+    }
 
-
-
-mod<-function()
-    {  
+mod1<-function()
+    {## THIS MODEL ATTEMPTS TO ESTIMATE WHETHER A FISH IS A RESIDENT OR NOT
+     ## IT ADDS A LATENT STATE TO THE MOD0 FOR RESIDENT OR MIGRANT
+    
     # S(.); daily survival=constant 
     # Gamma(.); daily movement probability=constant
     # p(.); capture probability=constant w/in primary

@@ -90,6 +90,31 @@ dat$X<-rep(1,dat$D)
 #
 #######################################################################
 
+
+# USGS GAGING STATION DATA
+siteNo <- "02448000"
+pCode <- c("00060","00065")
+start.date <- min(effort$date)
+end.date <- max(effort$date)
+## #         79689       00065     Gage height, feet
+## #         79690       00060     Discharge, cubic feet per second
+## READ IN NOXUBEE RIVER AT MACON GAGE DATA
+noxGage <- dataRetrieval::readNWISuv(siteNumbers = siteNo,
+    parameterCd = pCode,
+    startDate = start.date,
+    endDate = end.date)
+## RENAME TO SOMETHING USEFUL
+names(noxGage)[c(4,6)]<- c("Q","gage")
+## CONVERT POSIX TO DATE
+noxGage$Date<-as.Date(noxGage$dateTime)
+## DAILY MEANS
+noxDaily<- aggregate(cbind(Q,gage)~Date,noxGage,mean)
+
+
+
+
+
+
 ############# OKTOC SPILLWAY STAGE LOGGER (SN: 10868627) ############
 OktocSpillway<-sqlFetch(comm,"Temp & Stage Query",as.is=TRUE)
 
