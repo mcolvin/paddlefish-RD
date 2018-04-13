@@ -36,7 +36,7 @@ effort<- effort[order(effort$date, effort$set_number),]
 
 effort <- transform(effort,occasionId=as.numeric(factor(date)))
 effort$secid<-as.factor(c(1:nrow(effort)))## SECONDARY OCCASION ID
-
+effort$dayId<- as.integer(effort$date-min(effort$date))+1L
 ## START DATE
 strDate<- min(effort$date)
 endDate<- max(effort$date)
@@ -171,7 +171,7 @@ pCode <- c("00060","00065")
 ## #         79689       00065     Gage height, feet
 ## #         79690       00060     Discharge, cubic feet per second
 ## READ IN NOXUBEE RIVER AT MACON GAGE DATA
-noxGage <- readNWISuv(siteNumbers = siteNo,
+noxGage <- dataRetrieval::readNWISuv(siteNumbers = siteNo,
     parameterCd = pCode,
     startDate = strDate,
     endDate = endDate)
@@ -181,7 +181,7 @@ names(noxGage)[c(4,6)]<- c("Q","gage")
 noxGage$Date<-as.Date(noxGage$dateTime)
 ## DAILY MEANS
 noxDaily<- aggregate(cbind(Q,gage)~Date,noxGage,mean)
-noxDaily<- subset(noxDaily, Date<=end.date)
+noxDaily<- subset(noxDaily, Date<=endDate)
 
 
 ############# OKTOC SPILLWAY STAGE LOGGER (SN: 10868627) ############
@@ -250,16 +250,18 @@ dat$int_str<-sort(unique(effort$date-(min(effort$date)-1)))
 dat$int_end<-dat$int_str[-1]-1
 ## SCALAR; NUMBER OF PRIMARY OCCASIONS
 dat$nprim<-max(effort$occasionId)
+## MATRIX; CAPTURE HISTORIES, IND FISH
+dat$ch<-ch[,-1]
+dat$ch[dat$ch>1]<-1 ## some fish have replicate length/weight data
+dat$secid<-effort$occasionId
+dat$dayid<-effort$dayId    ## DAYS EACH SECONDARY OCCASION OCCURRED ON.
+
 ## SCALAR; NUMBER OF TAGGED FISH
 dat$M<-nrow(dat$ch)
 ## SCALAR; NUMBER OF SECONDARY OCCASIONS
 dat$nocc<-ncol(dat$ch)    
 ## MATRIX; DAILY COVARIATE
 dat$X<-X
-## MATRIX; CAPTURE HISTORIES, IND FISH
-dat$ch<-ch[,-1]
-dat$ch[dat$ch>1]<-1 ## some fish have replicate length/weight data
-dat$secid<-effort$occasionId
 
 ## MATRIX; ACOUSTIC TAGS
 

@@ -27,6 +27,53 @@ mod0<-function()
         }
     }
 
+## ESTIMATES STAGE AND ACOUSTIC STATES
+## AS A FUNCTION OF STAGE
+mod01<-function()
+    {
+    for(ind in 1:N_ac)
+        {
+        for(day in (ac_meta[ind,1]+1):ac_meta[ind,2]) ## loop over days with data
+            {
+            obs_state[day,ind]~dcat(psi[day,,tag_state[day-1,ind]])
+            }        
+        }
+    for(i in 1:D)
+        {
+        logit(gammaprimeprime[i])<-lo_gpp[1]+lo_gpp[2]*X[i,3] 
+        logit(gammaprime[i])<-lo_gp[1]+lo_gp[2]*X[i,3] 
+        # DAILY STATE TRANSITIONS: 1=pool, 2= outside, 3=translocated
+        psi[i,1,1]<- 1-gammaprimeprime[i]   # stays in 
+        psi[i,2,1]<- gammaprimeprime[i]     # moves out
+        psi[i,1,2]<- 1-gammaprime[i]        # moves in
+        psi[i,2,2]<- gammaprime[i]          # moves out
+        psi[i,1,3]<- 0                      # moves in
+        psi[i,2,3]<- 1                      # moves out: translocated
+        # PREDICT MISSING OKTOC STAGES
+        mu_stage[i]<-b[1]+b[2]*X[i,3]
+        X[i,4]~dnorm(mu_stage[i],tau)# inverse of variance 
+        }
+
+    # PRIORS
+    ## STAGE MODEL
+    b[1]~dnorm(0,0.001)
+    b[2]~dnorm(0,0.001)
+    tau~dgamma(0.001,0.001)# inverse of variance
+    sigma<-1/sqrt(tau)
+    
+    ## TRANSITION PROBABILITY PARAMETERS (1->2 AND 2->1)
+    ### 1->2: GAMMA''
+    lo_gpp[1]~dnorm(0,0.37)## CAPTURE PROBABILITY 
+    lo_gpp[2]~dnorm(0,0.37)## CAPTURE PROBABILITY 
+    
+    ### 2->1: GAMMA'
+    lo_gp[1]~dnorm(0,0.37)## CAPTURE PROBABILITY 
+    lo_gp[2]~dnorm(0,0.37)## CAPTURE PROBABILITY       
+    }
+    
+        
+    
+    
 mod1<-function()
     {## THIS MODEL ATTEMPTS TO ESTIMATE WHETHER A FISH IS A RESIDENT OR NOT
      ## IT ADDS A LATENT STATE TO THE MOD0 FOR RESIDENT OR MIGRANT

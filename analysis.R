@@ -16,10 +16,33 @@ source("_R/4_tables.R")
 source("_R/5_figures.R")
 source("_R/6_models.R")
 
+## MODEL 02: INTEGRATES MODEL 00 AND 01
+## TO INCORPORATE PIT AND ACOUSTIC TAGS
+## IN FISH.
 
-
-mod<-function()
+mod02<-function()
     {
+    
+    ## PIT TAGGED: OBSERVATION MODEL     
+    for(o in 1:nocc)
+        {
+        for(m in 1:M)
+            {            
+            ch[m,o]~dbern(cap_prob[secid[o]]*ZZ[int_str[,secid[o]])
+            }
+        }    
+          
+    ## LATENT STATE FOR PIT TAGGED FISH-DAILY
+    for(ind in 1:N_pit)
+        {
+        ZZ[ind,1]~dcat(ini[]) 
+        for(day in 2:duration)
+            {
+            ZZ[day,ind]~dcat(psi[day,,ZZ[day-1,ind]) ## ASSIGN A LOCATION TO EACH PIT TAGGED FISH
+            }        
+        }
+    
+    ## ACOUSTIC TAGGED FISH
     for(ind in 1:N_ac)
         {
         for(day in (ac_meta[ind,1]+1):ac_meta[ind,2]) ## loop over days with data
@@ -27,6 +50,7 @@ mod<-function()
             obs_state[day,ind]~dcat(psi[day,,tag_state[day-1,ind]])
             }        
         }
+    ## PREDICT STAGE FOR OKTOC FROM NOXUBEE
     for(i in 1:D)
         {
         logit(gammaprimeprime[i])<-lo_gpp[1]+lo_gpp[2]*X[i,3] 
@@ -44,6 +68,12 @@ mod<-function()
         }
 
     # PRIORS
+    
+    ## INITIAL STATE
+    a<-dnorm(0,0.37)
+    logit(ini[1])<-a
+    ini[2]<- 1-ini[1]
+    
     ## STAGE MODEL
     b[1]~dnorm(0,0.001)
     b[2]~dnorm(0,0.001)
@@ -58,11 +88,50 @@ mod<-function()
     ### 2->1: GAMMA'
     lo_gp[1]~dnorm(0,0.37)## CAPTURE PROBABILITY 
     lo_gp[2]~dnorm(0,0.37)## CAPTURE PROBABILITY       
+
+    ## PRIORS
+    for(kk in 1:nprim)
+        {
+        lo_p[kk]~dnorm(0,0.37)## CAPTURE PROBABILITY 
+        oo[kk]~dnorm(0,0.37)## GAMMA        
+        } 
+
     }
     
-    
-    
+## MODEL 02: COMBINES ACOUSTIC AND PIT
+inits<-function()
+    {
+    list(b=c(0,0),lo_gpp=c(0,0),lo_gp=c(0,0)
+    )}
+params<- c("b","lo_gp","lo_gpp")
+ptm <- proc.time()
+rundat<- dat[c("X","D","tag_state","obs_state","ac_meta","N_ac")]
+out <- jags.parallel(data=rundat,
+	inits=inits,
+	parameters=params,	
+	model.file=mod01,
+	n.chains = 3,	
+	n.iter = 5000,	
+	n.burnin = 2500, 
+	n.thin=2,
+	working.directory=getwd())
+       
+   
 
+
+
+
+    
+## MODEL 01: ESTIMATES THE PROBABILITY
+## ON A DAILY BASIS AND ESTIAMTES MISSING
+## STAGE DATA
+
+Z<-matrix(1,dat$M,dat$nprim)  # in or out of pool 
+qq<-rep(0,dat$nprim)   # pl  
+oo<-rep(0,dat$nprim)   # pl  
+inits<-function()
+    {list(Z=Z,qq=qq,oo=oo)}
+.
 inits<-function()
     {list(b=c(0,0),lo_gpp=c(0,0),lo_gp=c(0,0))}
 params<- c("b","lo_gp","lo_gpp")
@@ -71,7 +140,7 @@ rundat<- dat[c("X","D","tag_state","obs_state","ac_meta","N_ac")]
 out <- jags.parallel(data=rundat,
 	inits=inits,
 	parameters=params,	
-	model.file=mod,
+	model.file=mod01,
 	n.chains = 3,	
 	n.iter = 5000,	
 	n.burnin = 2500, 
