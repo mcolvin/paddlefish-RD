@@ -6,11 +6,11 @@
 #######################################################################
 library(R2jags)
 library(RODBC)
-library(dataRetrieval)
-library(lubridate)
+#library(dataRetrieval)
+#library(lubridate)
 source("_R/1_global.R")
 source("_R/2_functions.R")
-source("_R/3_load-and-clean.R") needs internet
+#source("_R/3_load-and-clean.R") needs internet
 dat<-readRDS("_output/dat.Rds")
 source("_R/4_tables.R")
 source("_R/5_figures.R")
@@ -68,7 +68,7 @@ inits<-function()
 params<- c("b","lo_gp","lo_gpp")
 ptm <- proc.time()
 rundat<- dat[c("X","D","tag_state","obs_state","ac_meta","N_ac")]
-out <- jags(data=rundat,
+out <- jags.parallel(data=rundat,
 	inits=inits,
 	parameters=params,	
 	model.file=mod,
