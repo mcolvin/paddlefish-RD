@@ -4,15 +4,97 @@
 #  LOAD SCRIPTS
 #
 #######################################################################
-
+library(R2jags)
+library(RODBC)
+library(dataRetrieval)
+library(lubridate)
 source("_R/1_global.R")
 source("_R/2_functions.R")
-source("_R/3_load-PIT.R")
+source("_R/3_load-and-clean.R") needs internet
+dat<-readRDS("_output/dat.Rds")
 source("_R/4_tables.R")
 source("_R/5_figures.R")
 source("_R/6_models.R")
 
-library(R2jags)
+
+
+mod<-function()
+    {
+    for(ind in 1:N_ac)
+        {
+        for(day in (ac_meta[ind,1]+1):ac_meta[ind,2]) ## loop over days with data
+            {
+            obs_state[day,ind]~dcat(psi[day,,tag_state[day-1,ind]])
+            }        
+        }
+    for(i in 1:D)
+        {
+        logit(gammaprimeprime[i])<-lo_gpp[1]+lo_gpp[2]*X[i,3] 
+        logit(gammaprime[i])<-lo_gp[1]+lo_gp[2]*X[i,3] 
+        # DAILY STATE TRANSITIONS: 1=pool, 2= outside, 3=translocated
+        psi[i,1,1]<- 1-gammaprimeprime[i]   # stays in 
+        psi[i,2,1]<- gammaprimeprime[i]     # moves out
+        psi[i,1,2]<- 1-gammaprime[i]        # moves in
+        psi[i,2,2]<- gammaprime[i]          # moves out
+        psi[i,1,3]<- 0                      # moves in
+        psi[i,2,3]<- 1                      # moves out: translocated
+        # PREDICT MISSING OKTOC STAGES
+        mu_stage[i]<-b[1]+b[2]*X[i,3]
+        X[i,4]~dnorm(mu_stage[i],tau)# inverse of variance 
+        }
+
+    # PRIORS
+    ## STAGE MODEL
+    b[1]~dnorm(0,0.001)
+    b[2]~dnorm(0,0.001)
+    tau~dgamma(0.001,0.001)# inverse of variance
+    sigma<-1/sqrt(tau)
+    
+    ## TRANSITION PROBABILITY PARAMETERS (1->2 AND 2->1)
+    ### 1->2: GAMMA''
+    lo_gpp[1]~dnorm(0,0.37)## CAPTURE PROBABILITY 
+    lo_gpp[2]~dnorm(0,0.37)## CAPTURE PROBABILITY 
+    
+    ### 2->1: GAMMA'
+    lo_gp[1]~dnorm(0,0.37)## CAPTURE PROBABILITY 
+    lo_gp[2]~dnorm(0,0.37)## CAPTURE PROBABILITY       
+    }
+    
+    
+    
+
+inits<-function()
+    {list(b=c(0,0),lo_gpp=c(0,0),lo_gp=c(0,0))}
+params<- c("b","lo_gp","lo_gpp")
+ptm <- proc.time()
+rundat<- dat[c("X","D","tag_state","obs_state","ac_meta","N_ac")]
+out <- jags(data=rundat,
+	inits=inits,
+	parameters=params,	
+	model.file=mod,
+	n.chains = 3,	
+	n.iter = 5000,	
+	n.burnin = 2500, 
+	n.thin=2,
+	working.directory=getwd())
+
+ptm <- proc.time()-ptm
+
+out$BUGSoutput$mean$psi
+
+plot(out$BUGSoutput$mean$mu_stage,X[,4])
+plot(out$BUGSoutput$mean$mu_stage,X[,2])
+plot(out$BUGSoutput$mean$mu_stage,X[,3])
+plot(out$BUGSoutput$mean$mu_stage,type='l',ylim=c(0,4))
+points(X[,4],type='l')
+
+fit<-lm(log(X[,4])~log(X[,3]+X[,2]))#
+plot(fitted(fit)~resid(fit))
+summary(fit)
+out$BUGSoutput$mean$b0
+out$BUGSoutput$mean$b1
+
+
 #######################################################################
 #
 #  MODEL 0

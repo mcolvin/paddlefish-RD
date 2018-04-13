@@ -39,6 +39,7 @@ effort$secid<-as.factor(c(1:nrow(effort)))## SECONDARY OCCASION ID
 
 ## START DATE
 strDate<- min(effort$date)
+endDate<- max(effort$date)
 
 
 
@@ -130,63 +131,57 @@ state_matrix["2018-01-25","A69-1303-11545"]<-3 #8
 
   
 ## ASSIGN VALUES PRE IMPLANTATION AS -99
+for(i in 1:nrow(meta))
+    {
+    state_matrix[dates<meta[i,]$Implantation,i]<- NA ## CENSOR PRE TAGGING
+    state_matrix[dates>meta[i,]$Failure_date,i]<- NA ## CENSOR POST TAG FAILURE
+    }    
 
-  rowId<-1
-  state_matrix[dates<meta[1,]$Implantation,1]<- -99 ## columns and value
-  head(state_matrix)
-
-  for(i in 1:nrow(meta))
-  {
-  state_matrix[dates<meta[i,]$Implantation,i]<- -99 ## columns and value
-  state_matrix[dates>meta[i,]$Failure_date,i]<- 4 ## columns and value
-  }    
-  
  
-state_matrix<-state_matrix+1 
- 
-state_matrix[state_matrix==-99]<-1
+#state_matrix<-state_matrix+1 
+#state_matrix[state_matrix==-99]<-1
  
 # 1=not tagged pr(capture)=0
-# 2=in pool pr(capture)=?
-# 3=outside pool pr(capture)=0
-# 4=physically moved pr(capture)=0 & gamma=1
+# 1=in pool pr(capture)=?
+# 2=outside pool pr(capture)=0
+# 5=physically moved pr(capture)=0 & gamma=1
 # 5=tag failed pr(capture)=0
 
+stuff<-lapply(1:ncol(state_matrix),function(x)
+    {
+    id<-1:nrow(state_matrix)
+    yy<-state_matrix[,x]
+    xx<-range(id[yy %in% c(1,2)]) 
+    return(data.frame(tagged=xx[1],fail=xx[2]))
+    })
 
+ac_meta<-do.call(rbind,stuff)## IDS TO EVALLUATE OVER (TAG DAY:END|FAILURE DAY)
 
-dayId<- as.Date(row.names(state_matrix))
-dayId<- (dayId-min(dayId))+1
-
-
+    
+    
 #######################################################################
 #
 #  LOAD COVARIATES
 #
 #######################################################################
 
-
 # USGS GAGING STATION DATA
 siteNo <- "02448000"
 pCode <- c("00060","00065")
-start.date <- min(effort$date)
-end.date <- max(effort$date)
 ## #         79689       00065     Gage height, feet
 ## #         79690       00060     Discharge, cubic feet per second
 ## READ IN NOXUBEE RIVER AT MACON GAGE DATA
-noxGage <- dataRetrieval::readNWISuv(siteNumbers = siteNo,
+noxGage <- readNWISuv(siteNumbers = siteNo,
     parameterCd = pCode,
-    startDate = start.date,
-    endDate = end.date)
+    startDate = strDate,
+    endDate = endDate)
 ## RENAME TO SOMETHING USEFUL
 names(noxGage)[c(4,6)]<- c("Q","gage")
 ## CONVERT POSIX TO DATE
 noxGage$Date<-as.Date(noxGage$dateTime)
 ## DAILY MEANS
 noxDaily<- aggregate(cbind(Q,gage)~Date,noxGage,mean)
-
-
-
-
+noxDaily<- subset(noxDaily, Date<=end.date)
 
 
 ############# OKTOC SPILLWAY STAGE LOGGER (SN: 10868627) ############
@@ -202,14 +197,14 @@ stage.dat$day<-as.numeric(format(stage.dat$Date1, "%d"))
 
 
 ## Stage Data
-Oktoc.Stage<-aggregate(Oktocstage~year+month+day,stage.dat,mean)
+Oktoc.Stage<-aggregate(cbind(Oktocstage,TempC)~year+month+day,stage.dat,mean)
 Oktoc.Stage<-Oktoc.Stage[order(Oktoc.Stage$year,Oktoc.Stage$month,Oktoc.Stage$day),] 
 Oktoc.Stage<-Oktoc.Stage[order(Oktoc.Stage$year,Oktoc.Stage$month,Oktoc.Stage$day),] 
-Oktoc.Stage$date<-as.POSIXct(paste(Oktoc.Stage$year,Oktoc.Stage$month,Oktoc.Stage$day, sep='-'))
+Oktoc.Stage$Date<-as.POSIXct(paste(Oktoc.Stage$year,Oktoc.Stage$month,Oktoc.Stage$day, sep='-'))
 
 
 ## Temperature Data
-temp.dat<-subset(OktocSpillway, Serial_Number==10760997)
+temp.dat<-subset(OktocSpillway, Serial_Number%in%c(10416312,10760997))
 
 temp.dat$Date1<-ymd_hms(temp.dat$Date) 
 temp.dat$temp.dat<-as.numeric(temp.dat$TempC) 
@@ -220,13 +215,22 @@ temp.dat$day<-as.numeric(format(temp.dat$Date1, "%d"))
 
 Oktoc.TempC<-aggregate(TempC~year+month+day,temp.dat,mean)
 Oktoc.TempC<-Oktoc.TempC[order(Oktoc.TempC$year,Oktoc.TempC$month,Oktoc.TempC$day),]
-Oktoc.TempC$date<-as.POSIXct(paste(Oktoc.TempC$year,Oktoc.TempC$month,Oktoc.TempC$day, sep='-'))
+Oktoc.TempC$Date<-as.POSIXct(paste(Oktoc.TempC$year,Oktoc.TempC$month,Oktoc.TempC$day, sep='-'))
 Oktoc.TempC<-subset(Oktoc.TempC, select=-c(year,month,day)) ## final Temp dataset
 
 
 # final merged with temp & stage dataset
-alldat<-merge(Oktoc.Stage,Oktoc.TempC, by=c("date"),all=TRUE) 
-alldat<-alldat[order(alldat$date),] 
+alldat<-merge(Oktoc.Stage,Oktoc.TempC, by=c("Date"),all=TRUE) 
+alldat<-alldat[order(alldat$Date),] 
+## FILL MISSING TEMPERATURE DATA
+alldat$TempC.y<-ifelse(is.na(alldat$TempC.y),alldat$TempC.x,alldat$TempC.y)
+
+# MERGE WITH USGS GAGE DATA
+alldat$day<- as.integer((as.Date(alldat$Date)-strDate)+1)
+noxDaily$day<- as.integer((as.Date(noxDaily$Date)-strDate)+1)
+alldat2<- merge(noxDaily, alldat,by="day",all.x=TRUE)
+X<- alldat2[,match(c("day","Q","gage","Oktocstage","TempC.y"),names(alldat2))]
+X<- X[order(X$day),]
 
 
 
@@ -239,7 +243,7 @@ alldat<-alldat[order(alldat$date),]
 dat<-list() 
 
 ## SCALAR; NUMBER OF DAYS
-dat$D<-as.integer(max(effort$date)-(min(effort$date)-1))
+dat$D<-as.integer(max(effort$date)-(min(effort$date)))+1L
 ## VECTOR; DAY OF SAMPLING
 dat$int_str<-sort(unique(effort$date-(min(effort$date)-1)))
 ## VECTOR; DAY BEFORE NEXT SAMPLING
@@ -251,9 +255,7 @@ dat$M<-nrow(dat$ch)
 ## SCALAR; NUMBER OF SECONDARY OCCASIONS
 dat$nocc<-ncol(dat$ch)    
 ## MATRIX; DAILY COVARIATE
-dat$X<-rep(1,dat$D)
-
-
+dat$X<-X
 ## MATRIX; CAPTURE HISTORIES, IND FISH
 dat$ch<-ch[,-1]
 dat$ch[dat$ch>1]<-1 ## some fish have replicate length/weight data
@@ -261,7 +263,9 @@ dat$secid<-effort$occasionId
 
 ## MATRIX; ACOUSTIC TAGS
 
-dat$tag_state <- stage_matrix # 1 for no tag/untagged/not running
-
-dat$tag_state[dat$tag_state%in% c(1,5)] <-2 # Pr(Detection = 0)
-dat$tag_state[dat$tag_state%in% c(1,5)] <-1 # Pr(Detection = 1)
+dat$tag_state<-state_matrix 
+dat$obs_state<-state_matrix 
+dat$obs_state[state_matrix==3]<-1 
+dat$ac_meta<-ac_meta
+dat$N_ac<- ncol(state_matrix)
+saveRDS(dat,"_output/dat.RDS")
