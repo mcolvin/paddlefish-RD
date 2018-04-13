@@ -10,7 +10,7 @@ library(dataRetrieval)
 library(lubridate)
 source("_R/1_global.R")
 source("_R/2_functions.R")
-source("_R/3_load-and-clean.R") needs internet
+source("_R/3_load-and-clean.R") #needs internet
 dat<-readRDS("_output/dat.Rds")
 source("_R/4_tables.R")
 source("_R/5_figures.R")
