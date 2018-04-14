@@ -6,8 +6,8 @@
 # ONE FISH HAS 2 TRANSMITTERS IN IT
 # TRASMITTTER %IN% C(11532,11529)
 # pit==1005085830
-
-
+11539
+121021201081
 
 #######################################################################
 #
@@ -52,22 +52,30 @@ endDate<- max(effort$date)
 
 ## QUERY TAGGING DATA
 taggingData<- sqlQuery(comm,"SELECT [Paddlefish Tagging Data].ID, [Paddlefish Tagging Data].Date, [Paddlefish Tagging Data].set AS set_number, [Paddlefish Tagging Data].tl, [Paddlefish Tagging Data].rfl, [Paddlefish Tagging Data].efl, [Paddlefish Tagging Data].girth, [Paddlefish Tagging Data].floy_color, [Paddlefish Tagging Data].floy_number, [Paddlefish Tagging Data].weight, [Paddlefish Tagging Data].pit, [Paddlefish Tagging Data].new_recap, [Paddlefish Tagging Data].transmitter, [Paddlefish Tagging Data].sex, [Paddlefish Tagging Data].transmitter_long FROM [Paddlefish Tagging Data]; ")
+taggingData<-taggingData[order(taggingData$ID),]
 taggingData$year<- format(taggingData$Date,"%Y")
 taggingData$doy<- as.numeric(as.character(format(taggingData$Date,"%j")))
 ## ASSIGN OCCASSION ID TO MASTER CAPTURE RECAPTURE DATASET
 tmp<-merge(taggingData,effort,by=c("year","doy","set_number"),all.x=TRUE)
 tmp<- tmp[which(is.na(tmp$occasionId)==FALSE),]
 tmp$tmp<-1
+tmp$transmitter_long<- as.character(tmp$transmitter_long)
+
+## ASSIGN WHETHER A FISH WAS ACOUSTICALLY TAGGED
+tag<- dcast(tmp, pit+transmitter_long~"n",value.var="tmp",sum)
+acoustics<-subset(tag,!(is.na(transmitter_long)))
+tag$acoustic<-ifelse(is.na(tag$transmitter_long),0,1)
+tag<-dcast(tag,pit~acoustic,value.var="n",length)
+tag<-tag[,c(1,3)]
+names(tag)[2]<-"type"
+tag$type<-ifelse(tag$type==0,"p",'a')
 ## SET UP CAPTURE HISTORY FOR ALL FISH
 ch<-reshape2::dcast(tmp,pit~secid,value.var="tmp",sum,
     drop=FALSE)
-  
-  
-dat<-list()
-dat$ch<-ch  
-  
-  
-  
+## CAPTURE HISTORY FOR PIT TAG ONLY FIHS
+ch_p<-subset(ch,pit%in% tag$pit[tag$type=="p"])    
+## CAPTURE HISTORY FOR ACOUSTIC TAG FISH
+ch_a<-subset(ch,pit%in% tag$pit[tag$type=="a"])    
   
 
 #######################################################################
@@ -76,13 +84,11 @@ dat$ch<-ch
 #
 #######################################################################
 meta<- sqlFetch(comm, "Transmitter Numbers")
+meta<-subset(meta,Transmitter != "A69-1303-11539")
 meta$Implantation<-as.Date(meta$"Implantation Date")
 duration<- max(effort$date)-min(effort$date)
-
 dates<-min(effort$date)+c(0:duration)
-
 state_matrix<-matrix(1,nrow=length(dates),ncol=nrow(meta))
-
 
 ## NAMING ROWS AND COLUMNS
 transmitter<-as.character(meta$Transmitter)
@@ -164,25 +170,28 @@ ac_meta<-do.call(rbind,stuff)## IDS TO EVALLUATE OVER (TAG DAY:END|FAILURE DAY)
 #  LOAD COVARIATES
 #
 #######################################################################
-
-# USGS GAGING STATION DATA
-siteNo <- "02448000"
-pCode <- c("00060","00065")
-## #         79689       00065     Gage height, feet
-## #         79690       00060     Discharge, cubic feet per second
-## READ IN NOXUBEE RIVER AT MACON GAGE DATA
-noxGage <- dataRetrieval::readNWISuv(siteNumbers = siteNo,
-    parameterCd = pCode,
-    startDate = strDate,
-    endDate = endDate)
-## RENAME TO SOMETHING USEFUL
-names(noxGage)[c(4,6)]<- c("Q","gage")
-## CONVERT POSIX TO DATE
-noxGage$Date<-as.Date(noxGage$dateTime)
-## DAILY MEANS
-noxDaily<- aggregate(cbind(Q,gage)~Date,noxGage,mean)
-noxDaily<- subset(noxDaily, Date<=endDate)
-
+if(run==TRUE)
+    {
+    # USGS GAGING STATION DATA
+    siteNo <- "02448000"
+    pCode <- c("00060","00065")
+    ## #         79689       00065     Gage height, feet
+    ## #         79690       00060     Discharge, cubic feet per second
+    ## READ IN NOXUBEE RIVER AT MACON GAGE DATA
+    noxGage <- dataRetrieval::readNWISuv(siteNumbers = siteNo,
+        parameterCd = pCode,
+        startDate = strDate,
+        endDate = endDate)
+    ## RENAME TO SOMETHING USEFUL
+    names(noxGage)[c(4,6)]<- c("Q","gage")
+    ## CONVERT POSIX TO DATE
+    noxGage$Date<-as.Date(noxGage$dateTime)
+    ## DAILY MEANS
+    noxDaily<- aggregate(cbind(Q,gage)~Date,noxGage,mean)
+    noxDaily<- subset(noxDaily, Date<=endDate)
+    saveRDS(noxDaily,"_output/noxDaily.RDS")
+    }
+noxDaily<-readRDS("_output/noxDaily.RDS")
 
 ############# OKTOC SPILLWAY STAGE LOGGER (SN: 10868627) ############
 OktocSpillway<-sqlFetch(comm,"Temp & Stage Query",as.is=TRUE)
@@ -239,7 +248,7 @@ X<- X[order(X$day),]
 #  BUNDLE UP DATA FOR JAGS
 #
 #######################################################################
-
+ 
 dat<-list() 
 
 ## SCALAR; NUMBER OF DAYS
