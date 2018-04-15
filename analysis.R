@@ -69,8 +69,8 @@ mod02<-function()
     ## PREDICT STAGE FOR OKTOC FROM NOXUBEE
     for(i in 1:D)
         {
-        logit(gammaprimeprime[i])<-lo_gpp[1]+lo_gpp[2]*X[i,3] 
-        logit(gammaprime[i])<-lo_gp[1]+lo_gp[2]*X[i,3] 
+        logit(gammaprimeprime[i])<-lo_gpp[1]+lo_gpp[2]*X[i,3] +lo_gpp[3]*X[i,5] 
+        logit(gammaprime[i])<-lo_gp[1]+lo_gp[2]*X[i,3] +lo_gp[3]*X[i,5] 
         # DAILY STATE TRANSITIONS: 1=pool, 2= outside, 3=translocated
         psi[i,1]<- 1-gammaprimeprime[i]   # in-->in 
         psi[i,2]<- 1-gammaprime[i]        # out-->in
@@ -98,10 +98,12 @@ mod02<-function()
     ### 1->2: GAMMA''
     lo_gpp[1]~dnorm(0,0.37)## CAPTURE PROBABILITY 
     lo_gpp[2]~dnorm(0,0.37)## CAPTURE PROBABILITY 
+    lo_gpp[3]~dnorm(0,0.37)## CAPTURE PROBABILITY 
     
     ### 2->1: GAMMA'
     lo_gp[1]~dnorm(0,0.37)## CAPTURE PROBABILITY 
     lo_gp[2]~dnorm(0,0.37)## CAPTURE PROBABILITY
+    lo_gp[3]~dnorm(0,0.37)## CAPTURE PROBABILITY
 
     ### CAPTURE PROBABILITY
     for(k in 1:nprim)
@@ -113,28 +115,31 @@ ZZ_a<-matrix(1,dat$D,dat$M_a)
 ZZ_p<-matrix(1,dat$D,dat$M_p)
 inits<-function(t)
     {
-    list(a=0,b=c(0,0),lo_gpp=c(0,0),lo_gp=c(0,0),ZZ_a=ZZ_a,ZZ_p=ZZ_p
+    list(a=0,b=c(0,0),lo_gpp=c(0,0,0),
+		lo_gp=c(0,0,0),ZZ_a=ZZ_a,ZZ_p=ZZ_p
     )}
 params<- c('a',"b","lo_gp","lo_gpp")
 ptm <- proc.time()
 rundat<- dat[c("D","X","nocc","dayid",#"ac_meta","tag_state",
     "ch_a","ch_p","nprim","secid","obs_state","obs_state_p",
     "M_a","M_p")] 
-out <- jags(data=rundat,
+out <- jags.parallel(data=rundat,
 	inits=inits,
 	parameters=params,	
 	model.file=mod02,
 	n.chains = 3,	
-	n.iter = 50,	
-	n.burnin = 25, 
+	n.iter = 7500,	
+	n.burnin = 4000,
+	export_obj_names=c("ZZ_a","ZZ_p"),	
 	n.thin=2,
 	working.directory=getwd())
 proc.time()-ptm
+saveRDS(out,"_output/rd-run.RDS")
+xx<-update(out,n.iter=2000, n.thin=1) 
 
-out$BUGSoutput$mean$tmp
 
 
-xx<-update(out,n.iter=1000, n.thin=1) 
+
 
     
 out <- bugs(data=rundat,
