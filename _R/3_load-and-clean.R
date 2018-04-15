@@ -267,13 +267,17 @@ dat$nprim<-max(effort$occasionId)
 ## MATRIX; CAPTURE HISTORIES, IND FISH
 dat$ch_a<-ch_a[,-1]
 dat$ch_a[dat$ch_a>1]<-1 ## some fish have replicate length/weight data
+dat$ch_p<-ch_p[,-1]
+dat$ch_p[dat$ch_p>1]<-1 ##
+
 dat$secid<-effort$occasionId
 dat$dayid<-effort$dayId    ## DAYS EACH SECONDARY OCCASION OCCURRED ON.
 
 ## SCALAR; NUMBER OF TAGGED FISH
 dat$M_a<-nrow(dat$ch_a)
+dat$M_p<-nrow(dat$ch_p)
 ## SCALAR; NUMBER OF SECONDARY OCCASIONS
-dat$nocc<-ncol(dat$ch)    
+dat$nocc<-ncol(dat$ch_p)    
 ## MATRIX; DAILY COVARIATE
 dat$X<-X
 

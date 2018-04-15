@@ -25,6 +25,22 @@ dat<-readRDS("_output/dat.RDS")
 ## MODEL 02: COMBINES ACOUSTIC AND PIT
 mod02<-function()
     {
+    for(indp in 1:M_p)
+        {
+        for(t_p in 1:nocc)
+            {        
+            ch_p[indp,t_p]~dbern(ZZ_p[dayid[t_p],indp]*p[secid[t_p]]) # PERFECT DETECTION
+            }      
+                ### PROCESS MODEL        
+        ZZ_p[1,indp]~dbern(ini)
+        for(ddd in 2:D)
+            {
+            ZZ_p[ddd,indp]~dbern(tmpp[ddd,indp])  ## 1 = in, 0 = out                     
+            tmpp[ddd,indp]<-ZZ_p[ddd-1,indp]*psi[ddd,1]+
+                (1-ZZ_a[ddd-1,indp])*psi[ddd,2]
+            }
+        }
+       
     ## PROCESS MODEL
     ### ASSIGNS FISH AS INSIDE OR OUTSIDE 
     for(ind in 1:M_a)
@@ -94,32 +110,31 @@ mod02<-function()
         }
     }
 ZZ_a<-matrix(1,dat$D,dat$M_a)
+ZZ_p<-matrix(1,dat$D,dat$M_p)
 inits<-function(t)
     {
-    list(a=0,b=c(0,0),lo_gpp=c(0,0),lo_gp=c(0,0),ZZ_a=ZZ_a
+    list(a=0,b=c(0,0),lo_gpp=c(0,0),lo_gp=c(0,0),ZZ_a=ZZ_a,ZZ_p=ZZ_p
     )}
 params<- c('a',"b","lo_gp","lo_gpp")
 ptm <- proc.time()
 rundat<- dat[c("D","X","nocc","dayid",#"ac_meta","tag_state",
-    "ch_a","nprim","secid","obs_state","obs_state_p",
-    "M_a")] 
+    "ch_a","ch_p","nprim","secid","obs_state","obs_state_p",
+    "M_a","M_p")] 
 out <- jags(data=rundat,
 	inits=inits,
 	parameters=params,	
 	model.file=mod02,
 	n.chains = 3,	
-	n.iter = 500,	
-	n.burnin = 250, 
+	n.iter = 50,	
+	n.burnin = 25, 
 	n.thin=2,
 	working.directory=getwd())
 proc.time()-ptm
 
 out$BUGSoutput$mean$tmp
 
-update(object, 
-update(object, 
-    n.iter=1000, n.thin=1, 
-    refresh=n.iter/50, progress.bar = "text", ...) 
+
+update(out,n.iter=1000, n.thin=1) 
 
     
 out <- bugs(data=rundat,
