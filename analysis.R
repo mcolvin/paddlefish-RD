@@ -134,7 +134,7 @@ proc.time()-ptm
 out$BUGSoutput$mean$tmp
 
 
-update(out,n.iter=1000, n.thin=1) 
+xx<-update(out,n.iter=1000, n.thin=1) 
 
     
 out <- bugs(data=rundat,
