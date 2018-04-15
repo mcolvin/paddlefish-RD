@@ -108,8 +108,8 @@ out <- jags(data=rundat,
 	parameters=params,	
 	model.file=mod02,
 	n.chains = 3,	
-	n.iter = 50,	
-	n.burnin = 25, 
+	n.iter = 500,	
+	n.burnin = 250, 
 	n.thin=2,
 	working.directory=getwd())
 proc.time()-ptm
