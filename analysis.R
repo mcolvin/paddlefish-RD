@@ -47,21 +47,8 @@ mod02<-function()
         for(dd in 2:D)
             {
             ZZ_a[dd,ind]~dbern(tmp[dd,ind])  ## 1 = in, 0 = out                     
-            #tmp[dd,ind]<-ZZ_a[dd-1,ind]*psi[dd,1]+
-            #    (1-ZZ_a[dd-1,ind])*psi[dd,2]
+            tmp[dd,ind]<-ZZ_a[dd-1,ind]*psi[dd,1]+(1-ZZ_a[dd-1,ind])*psi[dd,2]
             }
-        }
-    for(indd in 1:M_a)
-        {
-        ### PROCESS MODEL        
-        #ZZ_a[1,ind]~dbern(ini)
-        tmp[1,indd]<-0
-        for(ddd in 2:D)
-            {
-            #ZZ_a[ddd,indd]~dbern(tmp[ddd,indd])  ## 1 = in, 0 = out                     
-            tmp[ddd,indd]<-ZZ_a[ddd-1,indd]*psi[ddd,1]+
-                (1-ZZ_a[ddd-1,indd])*psi[ddd,2]
-            }        
         }
     ## PREDICT STAGE FOR OKTOC FROM NOXUBEE
     for(i in 1:D)
@@ -127,7 +114,7 @@ out <- jags(data=rundat,
 	working.directory=getwd())
 proc.time()-ptm
 
-
+out$BUGSoutput$mean$tmp
 
 update(object, 
 update(object, 
