@@ -16,38 +16,51 @@ source("_R/4_tables.R")
 source("_R/5_figures.R")
 source("_R/6_models.R")
 
+library(R2jags)
+#library(R2WinBUGS)
+dat<-readRDS("_output/dat.RDS")
 ## MODEL 02: INTEGRATES MODEL 00 AND 01
 ## TO INCORPORATE PIT AND ACOUSTIC TAGS
 ## IN FISH.
-
+## MODEL 02: COMBINES ACOUSTIC AND PIT
 mod02<-function()
     {
-    
-    ## PIT TAGGED: OBSERVATION MODEL     
-    for(o in 1:nocc)
+    ## PROCESS MODEL
+    ### ASSIGNS FISH AS INSIDE OR OUTSIDE 
+    for(ind in 1:M_a)
         {
-        for(m in 1:M)
-            {            
-            ch[m,o]~dbern(cap_prob[secid[o]]*ZZ[int_str[,secid[o]])
-            }
-        }    
-          
-    ## LATENT STATE FOR PIT TAGGED FISH-DAILY
-    for(ind in 1:N_pit)
-        {
-        ZZ[ind,1]~dcat(ini[]) 
-        for(day in 2:duration)
+        ### RECIEVER CAPTURES
+        #for(day in ac_meta[ind,1]:ac_meta[ind,2]) ## loop over days with data
+        for(day in 1:D) ## loop over days with data
             {
-            ZZ[day,ind]~dcat(psi[day,,ZZ[day-1,ind]) ## ASSIGN A LOCATION TO EACH PIT TAGGED FISH
+            pp_aa[day,ind]<-ZZ_a[day,ind]*obs_state_p[day,ind]           
+            obs_state[day,ind]~dbern(obs_state_p[day,ind]) # PERFECT DETECTION
             }        
-        }
-    
-    ## ACOUSTIC TAGGED FISH
-    for(ind in 1:N_ac)
-        {
-        for(day in (ac_meta[ind,1]+1):ac_meta[ind,2]) ## loop over days with data
+        ### PHYSICAL CAPTURES
+        for(t_ in 1:nocc)
             {
-            obs_state[day,ind]~dcat(psi[day,,tag_state[day-1,ind]])
+            pp_a[ind,t_]<-ZZ_a[dayid[t_],ind]*p[secid[t_]]
+            ch_a[ind,t_]~dbern(pp_a[ind,t_])
+            }
+        ### PROCESS MODEL        
+        ZZ_a[1,ind]~dbern(ini)
+        for(dd in 2:D)
+            {
+            ZZ_a[dd,ind]~dbern(tmp[dd,ind])  ## 1 = in, 0 = out                     
+            #tmp[dd,ind]<-ZZ_a[dd-1,ind]*psi[dd,1]+
+            #    (1-ZZ_a[dd-1,ind])*psi[dd,2]
+            }
+        }
+    for(indd in 1:M_a)
+        {
+        ### PROCESS MODEL        
+        #ZZ_a[1,ind]~dbern(ini)
+        tmp[1,indd]<-0
+        for(ddd in 2:D)
+            {
+            #ZZ_a[ddd,indd]~dbern(tmp[ddd,indd])  ## 1 = in, 0 = out                     
+            tmp[ddd,indd]<-ZZ_a[ddd-1,indd]*psi[ddd,1]+
+                (1-ZZ_a[ddd-1,indd])*psi[ddd,2]
             }        
         }
     ## PREDICT STAGE FOR OKTOC FROM NOXUBEE
@@ -56,12 +69,11 @@ mod02<-function()
         logit(gammaprimeprime[i])<-lo_gpp[1]+lo_gpp[2]*X[i,3] 
         logit(gammaprime[i])<-lo_gp[1]+lo_gp[2]*X[i,3] 
         # DAILY STATE TRANSITIONS: 1=pool, 2= outside, 3=translocated
-        psi[i,1,1]<- 1-gammaprimeprime[i]   # stays in 
-        psi[i,2,1]<- gammaprimeprime[i]     # moves out
-        psi[i,1,2]<- 1-gammaprime[i]        # moves in
-        psi[i,2,2]<- gammaprime[i]          # moves out
-        psi[i,1,3]<- 0                      # moves in
-        psi[i,2,3]<- 1                      # moves out: translocated
+        psi[i,1]<- 1-gammaprimeprime[i]   # in-->in 
+        psi[i,2]<- 1-gammaprime[i]        # out-->in
+        #psi[i,2]<- gammaprimeprime[i]     # in-->out        
+        #psi[i,2]<- gammaprime[i]          # out-->out
+
         # PREDICT MISSING OKTOC STAGES
         mu_stage[i]<-b[1]+b[2]*X[i,3]
         X[i,4]~dnorm(mu_stage[i],tau)# inverse of variance 
@@ -70,9 +82,8 @@ mod02<-function()
     # PRIORS
     
     ## INITIAL STATE
-    a<-dnorm(0,0.37)
-    logit(ini[1])<-a
-    ini[2]<- 1-ini[1]
+    a~dnorm(0,0.37)
+    logit(ini)<-a
     
     ## STAGE MODEL
     b[1]~dnorm(0,0.001)
@@ -87,40 +98,56 @@ mod02<-function()
     
     ### 2->1: GAMMA'
     lo_gp[1]~dnorm(0,0.37)## CAPTURE PROBABILITY 
-    lo_gp[2]~dnorm(0,0.37)## CAPTURE PROBABILITY       
+    lo_gp[2]~dnorm(0,0.37)## CAPTURE PROBABILITY
 
-    ## PRIORS
-    for(kk in 1:nprim)
+    ### CAPTURE PROBABILITY
+    for(k in 1:nprim)
         {
-        lo_p[kk]~dnorm(0,0.37)## CAPTURE PROBABILITY 
-        oo[kk]~dnorm(0,0.37)## GAMMA        
-        } 
-
+        p[k]~dunif(0,1)
+        }
     }
-    
-## MODEL 02: COMBINES ACOUSTIC AND PIT
-inits<-function()
+ZZ_a<-matrix(1,dat$D,dat$M_a)
+inits<-function(t)
     {
-    list(b=c(0,0),lo_gpp=c(0,0),lo_gp=c(0,0)
+    list(a=0,b=c(0,0),lo_gpp=c(0,0),lo_gp=c(0,0),ZZ_a=ZZ_a
     )}
-params<- c("b","lo_gp","lo_gpp")
+params<- c('a',"b","lo_gp","lo_gpp")
 ptm <- proc.time()
-rundat<- dat[c("X","D","tag_state","obs_state","ac_meta","N_ac")]
-out <- jags.parallel(data=rundat,
+rundat<- dat[c("D","X","nocc","dayid",#"ac_meta","tag_state",
+    "ch_a","nprim","secid","obs_state","obs_state_p",
+    "M_a")] 
+out <- jags(data=rundat,
 	inits=inits,
 	parameters=params,	
-	model.file=mod01,
+	model.file=mod02,
 	n.chains = 3,	
-	n.iter = 5000,	
-	n.burnin = 2500, 
+	n.iter = 50,	
+	n.burnin = 25, 
 	n.thin=2,
 	working.directory=getwd())
-       
-   
+proc.time()-ptm
 
 
 
+update(object, 
+update(object, 
+    n.iter=1000, n.thin=1, 
+    refresh=n.iter/50, progress.bar = "text", ...) 
 
+    
+out <- bugs(data=rundat,
+	inits=inits,
+	parameters.to.save=params,	
+	model.file=paste(getwd(),"_output/mod02.bug",sep="/"),
+    debug=TRUE,
+    bugs.directory="C:/Users/mcolvin/Documents/WinBUGS14",
+	n.chains = 1,	
+	n.iter = 50,	
+	n.burnin = 25, 
+	n.thin=2,
+     working.directory=getwd())  
+
+file.show("_output/mod02.bug")    
     
 ## MODEL 01: ESTIMATES THE PROBABILITY
 ## ON A DAILY BASIS AND ESTIAMTES MISSING

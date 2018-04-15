@@ -76,7 +76,7 @@ ch<-reshape2::dcast(tmp,pit~secid,value.var="tmp",sum,
 ch_p<-subset(ch,pit%in% tag$pit[tag$type=="p"])    
 ## CAPTURE HISTORY FOR ACOUSTIC TAG FISH
 ch_a<-subset(ch,pit%in% tag$pit[tag$type=="a"])    
-  
+ch_a<-ch_a[match(acoustics$pit,ch_a$pit),]  
 
 #######################################################################
 #
@@ -91,9 +91,7 @@ dates<-min(effort$date)+c(0:duration)
 state_matrix<-matrix(1,nrow=length(dates),ncol=nrow(meta))
 
 ## NAMING ROWS AND COLUMNS
-transmitter<-as.character(meta$Transmitter)
-colnames(state_matrix)<-transmitter #COLUMNS = FISH id
-
+colnames(state_matrix)<-acoustics$transmitter_long #COLUMNS = FISH id
 dates<-as.character(dates)
 rownames(state_matrix)<-dates #ROWS = DATES
 
@@ -143,28 +141,35 @@ for(i in 1:nrow(meta))
     state_matrix[dates>meta[i,]$Failure_date,i]<- NA ## CENSOR POST TAG FAILURE
     }    
 
- 
-#state_matrix<-state_matrix+1 
-#state_matrix[state_matrix==-99]<-1
- 
-# 1=not tagged pr(capture)=0
 # 1=in pool pr(capture)=?
 # 2=outside pool pr(capture)=0
-# 5=physically moved pr(capture)=0 & gamma=1
-# 5=tag failed pr(capture)=0
 
+## SET INDEX FOR STATES THAT ARE ASSIGNED
 stuff<-lapply(1:ncol(state_matrix),function(x)
     {
     id<-1:nrow(state_matrix)
     yy<-state_matrix[,x]
     xx<-range(id[yy %in% c(1,2)]) 
-    return(data.frame(tagged=xx[1],fail=xx[2]))
+    return(data.frame(tag=colnames(state_matrix)[x],tagged=xx[1],fail=xx[2]))
     })
 
 ac_meta<-do.call(rbind,stuff)## IDS TO EVALLUATE OVER (TAG DAY:END|FAILURE DAY)
+## ADD PIT TAG NUMBERS
+ac_meta<- merge(ac_meta, acoustics[,-3], 
+    by.x="tag",by.y="transmitter_long",all.x=TRUE)
+ac_meta$life<- ac_meta$fail-ac_meta$tagged
+ac_meta <- ac_meta[order(ac_meta$tagged,
+    -1*ac_meta$life,decreasing=FALSE),] 
+rownames(ac_meta)<-1:nrow(ac_meta) 
 
-    
-    
+## ORDER STATE MATRIX TO MATCH AC_META
+indx<- match(ac_meta$tag,colnames(state_matrix))
+state_matrix<- state_matrix[,indx]
+## ORDER CAPTURE HISTORIES TO MATCH AC_META
+indx<- match(ac_meta$pit,ch_a$pit)
+ch_a<-ch_a[indx,]
+
+  
 #######################################################################
 #
 #  LOAD COVARIATES
@@ -260,13 +265,13 @@ dat$int_end<-dat$int_str[-1]-1
 ## SCALAR; NUMBER OF PRIMARY OCCASIONS
 dat$nprim<-max(effort$occasionId)
 ## MATRIX; CAPTURE HISTORIES, IND FISH
-dat$ch<-ch[,-1]
-dat$ch[dat$ch>1]<-1 ## some fish have replicate length/weight data
+dat$ch_a<-ch_a[,-1]
+dat$ch_a[dat$ch_a>1]<-1 ## some fish have replicate length/weight data
 dat$secid<-effort$occasionId
 dat$dayid<-effort$dayId    ## DAYS EACH SECONDARY OCCASION OCCURRED ON.
 
 ## SCALAR; NUMBER OF TAGGED FISH
-dat$M<-nrow(dat$ch)
+dat$M_a<-nrow(dat$ch_a)
 ## SCALAR; NUMBER OF SECONDARY OCCASIONS
 dat$nocc<-ncol(dat$ch)    
 ## MATRIX; DAILY COVARIATE
@@ -276,7 +281,13 @@ dat$X<-X
 
 dat$tag_state<-state_matrix 
 dat$obs_state<-state_matrix 
-dat$obs_state[state_matrix==3]<-1 
-dat$ac_meta<-ac_meta
+dat$obs_state[dat$obs_state==3]<-1 
+dat$obs_state[dat$obs_state==2]<-0 
+dat$obs_state[is.na(dat$obs_state)]<-0 
+
+dat$obs_state_p<- dat$obs_state
+dat$obs_state_p[is.na(dat$obs_state_p)]<- 0
+
+dat$ac_meta<-ac_meta[,-1]
 dat$N_ac<- ncol(state_matrix)
 saveRDS(dat,"_output/dat.RDS")
