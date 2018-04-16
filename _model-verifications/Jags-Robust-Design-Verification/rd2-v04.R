@@ -23,13 +23,13 @@ beta0<- c(0,0,1)
 library(R2jags)
 omega<-0.6
 lambda<-0.7
-nocc<-4
-n<-250
+nocc<-8
+n<-120
 Z<-rbinom(n,1,omega)
 indx<- which(Z==1)
 Ntrue<-sum(Z)
 
-nprim<- 4
+nprim<- 40
 nstates<- 3
 psi<-matrix(0,nstates,nprim)
 
@@ -142,8 +142,8 @@ primary<- function()
     Nhat<- sum(Z[]) 
 
 	## PRIORS
-	omega~dunif(0,1)
-	lambda~dunif(0,1)
+	omega~dunif(0,1) ## 
+	lambda~dunif(0,1) ## INSIDE OR OUTSIDE
 	p~dunif(0,1)
     }
 
