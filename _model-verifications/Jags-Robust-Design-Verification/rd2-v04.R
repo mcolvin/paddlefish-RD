@@ -40,7 +40,7 @@ psi[,3]<-psi[,3]/sum(psi[,3])
 psi[,4]<-c(lambda,(1-lambda),0)
     
     
-    
+## STATE 1:    
 S<-matrix(NA,n,nprim)
 for(i in 1:nprim)
     {

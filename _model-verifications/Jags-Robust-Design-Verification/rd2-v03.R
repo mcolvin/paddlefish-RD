@@ -3,15 +3,15 @@
 ## V03: same as 2 but with acoustic - done
 
 library(R2jags)
-omega<-0.6
-lambda<-0.7
+omega<-0.6      ## INCLUSION PROBAABILITY
+lambda<-0.7     ## IN OUT
 nocc<-4
 n<-250
 Z<-rbinom(n,1,omega)
 indx<- which(Z==1)
 Ntrue<-sum(Z)
 
-nprim<- 4
+nprim<- 40
 psi<-c(lambda,
     (1-lambda))
 S<-matrix(3,n,nprim)
