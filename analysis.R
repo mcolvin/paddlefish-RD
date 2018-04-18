@@ -4,10 +4,7 @@
 #  LOAD SCRIPTS
 #
 #######################################################################
-library(R2jags)
 library(RODBC)
-#library(dataRetrieval)
-#library(lubridate)
 source("_R/1_global.R")
 source("_R/2_functions.R")
 run<-FALSE # SET TO TRUE TO REQUERY NOXUBEE GAGE DATA
@@ -21,6 +18,97 @@ library(R2jags)
 
 ## MODEL 03: INTEGRATED POPULATION MODEL FORMULATION
 
+mod<-function()
+    {
+    pcap[1]<- 1-exp(sum(log_p0[1,1:nocc[1]])) #PROBABILIYT OF CAPTURE
+    ncap[1]~dbin(pcap[1],N_lat[1])      
+    for(iii in 1:3)
+        {
+        a[iii]~dnorm(0, 0.0001)
+        b[iii]~dnorm(0,0.37)
+        }
+    for(i in 2:D)
+        {
+        N_lat[i]~dpois(mu1[i]);T(0,135)## MAKE SURE THIS IS LARGER THAN THE PRIOR!
+        mu1[i]<-N_lat[i-1]+(r[i]+ pl[i]*N_lat[i-1])
+        r[i]<- exp(a[1]+a[2]*X[i,1]+a[3]*X[i,2]) #c(-6,0.02,-0.04)
+        logit(pl[i])<- b[1]+b[2]*X[i,1]+b[3]*X[i,2]
+        }
+        
+    N[1]<- sum(Z[,1])   
+    for(ii in 2:nprim)
+        {
+        N[ii]<- sum(Z[,ii])
+        pcap[ii]<- 1-exp(sum(log_p0[ii,1:nocc[ii]])) #PROBABILIYT OF CAPTURE
+        ncap[ii]~dbin(pcap[ii],N_lat[tt[ii]])        
+        }    
+    # ESTIMATE ABUNDANCE FROM CMR
+    for(i in 1:M)
+        {
+        for(k in 1:nprim)
+            {
+            ip[i,k]<- omega[k]*(1-Z_known[i,k])+Z_known[i,k]# INCLUSION PROBABILITY OMEGA OR 1, 1 = ACOUSTIC
+            Z[i,k]~dbern(omega[k])
+            for(l in 1:nocc[k])
+                {
+                ch[i,l,k]~dbern(Z[i,k]*p[k,l])
+                }
+            }
+        }
+    # PRIORS
+    p1~dunif(0,1)
+    for(i in 1:nprim)
+        {
+        omega[i]~dunif(0,1)
+        for(j in 1:5) ## CAPTURE PROBABILITIES & pr(NO CAPTURE)
+            {
+            p[i,j]<-p1
+            p0[i,j]<- 1-p[i,j]
+            log_p0[i,j]<- log(p0[i,j])
+            }
+        }
+    N1~dunif(10,130)
+    N_lat[1]<-round(N1)
+    }
+library(R2jags)
+dat<- list(ch=ch,
+    nocc=nocc,
+    tt=tt,
+    D=D,
+    nprim=nprim,
+    M=M,
+    Z_known=Z_known,
+    ncap=ncap,
+    X=tmp[,1:2])
+ini<-list()
+Z<-matrix(1,M,nprim)
+inits<- function()
+	{
+	list(omega=apply(Z,2,mean),
+        p1=0.1,Z=Z,N1=100,
+        b=c(-6,0.02,-0.04),
+        a=c(-10,1.3,-1.04))
+	}
+params<-c("N","N_lat","pcap","p1","N1","a","b")	
+ptm<- proc.time()
+out<-NULL
+out <- jags.parallel(data=dat,
+	inits=inits,
+	parameters=params,	
+	model.file=mod,
+	n.chains = 3,	
+	n.iter = 10000,	
+	n.burnin = 6500, 
+	n.thin=1,
+    export_obj_names=c("Z","D"),
+	working.directory=getwd())
+tot<-proc.time()-ptm
+print(paste0(round(tot[3]/60,1)," minutes"))   
+plot(N[tt],out$BUGSoutput$mean$N);abline(0,1)
+plot(out$BUGSoutput$mean$N_lat[tt],out$BUGSoutput$mean$N);abline(0,1)
+plot(out$BUGSoutput$mean$N_lat,type='l',ylim=c(0,150))
+points(N,type='l',col="red");abline(v=tt)
+ 
 
 
 

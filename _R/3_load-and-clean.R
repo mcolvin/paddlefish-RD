@@ -6,8 +6,8 @@
 # ONE FISH HAS 2 TRANSMITTERS IN IT
 # TRASMITTTER %IN% C(11532,11529)
 # pit==1005085830
-11539
-121021201081
+#11539
+#121021201081
 
 #######################################################################
 #
@@ -168,6 +168,9 @@ state_matrix<- state_matrix[,indx]
 ## ORDER CAPTURE HISTORIES TO MATCH AC_META
 indx<- match(ac_meta$pit,ch_a$pit)
 ch_a<-ch_a[indx,]
+
+
+
 
   
 #######################################################################
