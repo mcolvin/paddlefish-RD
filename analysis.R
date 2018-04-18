@@ -15,9 +15,21 @@ source("_R/3_load-and-clean.R") #needs internet to pull gage data
 source("_R/4_tables.R")
 source("_R/5_figures.R")
 source("_R/6_models.R")
-
 library(R2jags)
-#library(R2WinBUGS)
+
+
+
+## MODEL 03: INTEGRATED POPULATION MODEL FORMULATION
+
+
+
+
+
+
+
+
+
+
 dat<-readRDS("_output/dat.RDS")
 ## MODEL 02: INTEGRATES MODEL 00 AND 01
 ## TO INCORPORATE PIT AND ACOUSTIC TAGS
