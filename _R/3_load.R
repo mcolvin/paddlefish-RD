@@ -15,7 +15,7 @@ dat<-list()
 #
 #######################################################################
 
-comm<- odbcConnectAccess2007("C:/Users/mcolvin/Documents/projects/Paddlefish/analysis/data/Paddlefish Database.accdb")
+comm<- odbcConnectAccess2007("C:/Users/mcolvin/Documents/projects/Paddlefish/analysis/_dat/Paddlefish Database.accdb")
 
 #######################################################################
 #
