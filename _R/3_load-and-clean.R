@@ -256,6 +256,51 @@ X<- X[order(X$day),]
 #  BUNDLE UP DATA FOR JAGS
 #
 #######################################################################
+
+## DATA FORMATTED FOR IMP
+ipmdat<-list()
+### SCALAR; NUMBER OF DAYS
+ipmdat$D<-as.integer(max(effort$date)-(min(effort$date)))+1L
+### VECTOR; DAY OF SAMPLING
+ipmdat$tt<-sort(unique(effort$date-(min(effort$date)-1)))
+### CAPTURE HISTORY FOR PIT AND ACOUSTIC
+chipm<-rbind(ch_p[,-1],ch_a[,-1])
+ipmdat$ch<-as.matrix(chipm)
+ipmdat$ch[ipmdat$ch>1]<-1 ## multiple lengths
+colnames(ipmdat$ch)<-NULL
+ipmdat$ch<- rbind(ipmdat$ch,matrix(0,20,ncol(ipmdat$ch))) ## AUGMENT BY 20 ROWS
+ipmdat$M<-nrow(ipmdat$ch)
+ipmdat$secid<-effort$occasionId
+ipmdat$dayid<-effort$dayId    ## DAYS EACH SECONDARY OCCASION OCCURRED ON.
+ipmdat$nprim<-length(ipmdat$tt)
+ipmdat$nocc<-length(effort$occasionId)
+
+## MATRIX OF 0 OR 1; 1 IF KNOWN FOR SURE TO BE IN POOL
+Z_known_p<-ch_p[,-1]
+Z_known_p[Z_known_p>0]<-0
+Z_known_p<-Z_known_p[,1:58]
+colnames(Z_known_p)<-NULL
+Z_known_a<-t(state_matrix[ipmdat$tt,])
+Z_known_a[is.na(Z_known_a)]<-0
+Z_known_a[Z_known_a==2]<-0
+Z_known_a[Z_known_a==3]<-1
+colnames(Z_known_a)<-NULL
+rownames(Z_known_a)<-NULL
+ipmdat$Z_known<- rbind(as.matrix(Z_known_p),as.matrix(Z_known_a))
+ipmdat$Z_known<- rbind(ipmdat$Z_known,matrix(0,20,ncol(ipmdat$Z_known)))
+
+## MATRIX; DAILY COVARIATE
+ipmdat$X<-X
+ipmdat$X[,2]<-scale(ipmdat$X[,2],center=mean(ipmdat$X[,2]),scale=sd(ipmdat$X[,2]))
+ipmdat$X[,3]<-scale(ipmdat$X[,3],center=mean(ipmdat$X[,3]),scale=sd(ipmdat$X[,3]))
+ipmdat$ncap<- sapply(1:ipmdat$nprim,function(x)
+    {
+    tmpp<-sum(apply(ipmdat$ch[,which(ipmdat$secid==x)],1,max))
+    })
+save(ipmdat,file="_output/ipmdat.Rdata")
+ 
+ 
+ 
  
 dat<-list() 
 
