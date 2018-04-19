@@ -107,14 +107,14 @@ out <- jags.parallel(data=dat,
 	parameters=params,	
 	model.file=mod,
 	n.chains = 3,	
-	n.iter = 100,	
-	n.burnin = 65, 
+	n.iter = 50000,	
+	n.burnin = 35000, 
 	n.thin=1,
     export_obj_names=c("Z","D"),
 	working.directory=getwd())
 tot<-proc.time()-ptm
 print(paste0(round(tot[3]/60,1)," minutes")) 
-#save(out,file="_output/ests.Rdata")
+save(out,file="_output/ests.Rdata")
 
 
  
@@ -123,14 +123,26 @@ plot(out$BUGSoutput$mean$N_lat[tt],out$BUGSoutput$mean$N);abline(0,1)
 plot(out$BUGSoutput$mean$N_lat,type='l',ylim=c(0,150))
 points(N,type='l',col="red");abline(v=tt)
  
+upr<-out$BUGSoutput$summary
+upr<-upr[grep("N_lat",rownames(upr)),c(1,2,3,7)]
+ 
+estdat<- as.Date("2016-02-11")+dat$X$day
+plot(estdat,out$BUGSoutput$mean$N_lat,type='n',ylim=c(0,150))
+y<-c(upr[,3],rev(upr[,4]))
+x<-c(estdat,rev(estdat))
+polygon(x,y,col="lightgrey",border='lightgrey')
+points(estdat,upr[,1],type='l',ylim=c(0,150))
 
 
+upr<-out$BUGSoutput$summary
+upr<-upr[grep("N\\[",rownames(upr)),c(1,2,3,7)]
+plot(ipmdat$tt,upr[,1],ylim=c(0,120),pch=19)
+segments(ipmdat$tt,upr[,3],ipmdat$tt,upr[,4])
 
-
-
-
-
-
+upr<-out$BUGSoutput$summary
+coeffs<-upr[grep("b",rownames(upr)),c(1,2,3,7)]
+coeffs<-rbind(coeffs,upr[grep("a",rownames(upr)),c(1,2,3,7)])
+coeffs
 
 dat<-readRDS("_output/dat.RDS")
 ## MODEL 02: INTEGRATES MODEL 00 AND 01
