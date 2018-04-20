@@ -59,12 +59,12 @@ mod<-function()
             ch[i,k]~dbern(Z[i,secid[k]]*p[secid[k],occId[k]])
             }
         }    
-        
+         N1[1]~dunif(10,155)
+        N_lat[1]<-round(N1[1])       
     # PRIORS
     for(i in 1:nprim)
         {
-        N1[i]~dunif(10,155)
-        N_lat[i]<-round(N1[i])
+
         omega[i]~dunif(0,1)
         for(j in 1:12)
             {
@@ -109,8 +109,8 @@ out <- jags.parallel(data=dat,
 	parameters=params,	
 	model.file=mod,
 	n.chains = 3,	
-	n.iter = 5000,	
-	n.burnin = 3000, 
+	n.iter = 50000,	
+	n.burnin = 30000, 
 	n.thin=1,
     export_obj_names=c("Z","D"),
 	working.directory=getwd())

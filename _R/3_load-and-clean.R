@@ -293,6 +293,8 @@ ipmdat$Z_known<- rbind(ipmdat$Z_known,matrix(0,20,ncol(ipmdat$Z_known)))
 ipmdat$X<-X
 ipmdat$X[,2]<-scale(ipmdat$X[,2],center=mean(ipmdat$X[,2]),scale=sd(ipmdat$X[,2]))
 ipmdat$X[,3]<-scale(ipmdat$X[,3],center=mean(ipmdat$X[,3]),scale=sd(ipmdat$X[,3]))
+ipmdat$X[,4]<-scale(ipmdat$X[,4],center=mean(ipmdat$X[,4]),scale=sd(ipmdat$X[,4]))
+ipmdat$X[,5]<-scale(ipmdat$X[,5],center=mean(ipmdat$X[,5]),scale=sd(ipmdat$X[,5]))
 ipmdat$ncap<- sapply(1:ipmdat$nprim,function(x)
     {
     tmpp<-sum(apply(ipmdat$ch[,which(ipmdat$secid==x)],1,max))
