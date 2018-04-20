@@ -24,7 +24,7 @@ load("_output/ipmdat.Rdata")
 mod<-function()
     {
     pcap[1]<- 1-exp(sum(log_p0[1,1:noccs[1]])) #PROBABILIYT OF CAPTURE
-    ncap[1]~dbin(pcap[1],N_lat[1])      
+    ncap[1]~dbin(pcap[1],N_lat[1]) 
     for(iii in 1:3)
         {
         a[iii]~dnorm(0, 0.0001)
@@ -41,16 +41,17 @@ mod<-function()
     N[1]<- sum(Z[,1])   
     for(ii in 2:nprim)
         {
-        N[ii]<- sum(Z[,ii])  ## fixme ## below
+        N[ii]<- sum(Z[,ii])  
         pcap[ii]<- 1-exp(sum(log_p0[ii,1:noccs[ii]])) #PROBABILIYT OF CAPTURE
         ncap[ii]~dbin(pcap[ii],N_lat[tt[ii]])        
+        #NNtest[ii]<- ncap[ii]/pcap[ii]        
         }    
     # ESTIMATE ABUNDANCE FROM CMR
     for(i in 1:M)
         {
         for(j in 1:nprim)
             {
-            ip[i,j]<- omega[j]*(1-Z_known[i,j])+Z_known[i,j]# INCLUSION PROBABILITY OMEGA OR 1, 1 = ACOUSTIC
+            ip[i,j]<-omega[j]*(1-Z_known[i,j])+Z_known[i,j]# INCLUSION PROBABILITY OMEGA OR 1, 1 = ACOUSTIC
             Z[i,j]~dbern(ip[i,j])            
             }
         for(k in 1:nocc)
@@ -62,6 +63,8 @@ mod<-function()
     # PRIORS
     for(i in 1:nprim)
         {
+        N1[i]~dunif(10,155)
+        N_lat[i]<-round(N1[i])
         omega[i]~dunif(0,1)
         for(j in 1:12)
             {
@@ -70,8 +73,7 @@ mod<-function()
             log_p0[i,j]<- log(p0[i,j])
             }
         }
-    N1~dunif(10,155)
-    N_lat[1]<-round(N1)
+
     }
     
 library(R2jags)
@@ -95,11 +97,11 @@ Z<-matrix(1,dat$M,dat$nprim)
 inits<- function()
 	{
 	list(omega=apply(Z,2,mean),
-        p1=0.1,Z=Z,N1=100,
+        p1=0.1,Z=Z,
         b=c(-6,0.02,-0.04),
         a=c(-10,1.3,-1.04))
 	}
-params<-c("N","N_lat","p")#"pcap","p1","N1","a","b")	
+params<-c("N","N_lat","NNtest")#"p")#"pcap","p1","N1","a","b")	
 ptm<- proc.time()
 out<-NULL
 out <- jags.parallel(data=dat,
@@ -107,16 +109,16 @@ out <- jags.parallel(data=dat,
 	parameters=params,	
 	model.file=mod,
 	n.chains = 3,	
-	n.iter = 50000,	
-	n.burnin = 35000, 
+	n.iter = 5000,	
+	n.burnin = 3000, 
 	n.thin=1,
     export_obj_names=c("Z","D"),
 	working.directory=getwd())
 tot<-proc.time()-ptm
 print(paste0(round(tot[3]/60,1)," minutes")) 
-save(out,file="_output/ests.Rdata")
+#save(out,file="_output/ests.Rdata")
 
-
+plot(out$BUGSoutput$mean$N_lat,out$BUGSoutput$mean$N);abline(0,1)
  
 plot(N[tt],out$BUGSoutput$mean$N);abline(0,1)
 plot(out$BUGSoutput$mean$N_lat[tt],out$BUGSoutput$mean$N);abline(0,1)

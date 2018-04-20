@@ -91,7 +91,7 @@ dates<-min(effort$date)+c(0:duration)
 state_matrix<-matrix(1,nrow=length(dates),ncol=nrow(meta))
 
 ## NAMING ROWS AND COLUMNS
-colnames(state_matrix)<-acoustics$transmitter_long #COLUMNS = FISH id
+colnames(state_matrix)<-meta$Transmitter #COLUMNS = FISH id
 dates<-as.character(dates)
 rownames(state_matrix)<-dates #ROWS = DATES
 
