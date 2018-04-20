@@ -14,7 +14,7 @@ library(R2jags)
 dat<-readRDS("_output/dat.RDS")
 dat$X[,2]<-scale(dat$X[,2],center=mean(dat$X[,2]),scale=sd(dat$X[,2]))
 dat$X[,3]<-scale(dat$X[,3],center=mean(dat$X[,3]),scale=sd(dat$X[,3]))
-dat$X[,3]<-scale(dat$X[,4],center=mean(dat$X[,4]),scale=sd(dat$X[,4]))
+dat$X[,4]<-scale(dat$X[,4],center=mean(dat$X[,4]),scale=sd(dat$X[,4]))
 ## MODEL 02: INTEGRATES MODEL 00 AND 01
 ## TO INCORPORATE PIT AND ACOUSTIC TAGS
 ## IN FISH.
