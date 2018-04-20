@@ -101,7 +101,7 @@ inits<- function()
         b=c(-6,0.02,-0.04),
         a=c(-10,1.3,-1.04))
 	}
-params<-c("N","N_lat","NNtest")#"p")#"pcap","p1","N1","a","b")	
+params<-c("N","N_lat","p","a","b")#"pcap","p1","N1")	
 ptm<- proc.time()
 out<-NULL
 out <- jags.parallel(data=dat,
@@ -116,7 +116,7 @@ out <- jags.parallel(data=dat,
 	working.directory=getwd())
 tot<-proc.time()-ptm
 print(paste0(round(tot[3]/60,1)," minutes")) 
-#save(out,file="_output/ests.Rdata")
+save(out,file="_output/ests-with-a-b.Rdata")
 
 plot(out$BUGSoutput$mean$N_lat,out$BUGSoutput$mean$N);abline(0,1)
  
