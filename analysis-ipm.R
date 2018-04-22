@@ -34,8 +34,8 @@ mod<-function()
         {
         N_lat[i]~dpois(mu1[i]);T(0,160)## MAKE SURE THIS IS LARGER THAN THE PRIOR!
         mu1[i]<-N_lat[i-1]+(r[i]+ pl[i]*N_lat[i-1])
-        r[i]<- exp(a[1]+a[2]*X[i,2]+a[3]*X[i,3]) #c(-6,0.02,-0.04)
-        logit(pl[i])<- b[1]+b[2]*X[i,2]+b[3]*X[i,3]
+        r[i]<- exp(a[1]+a[2]*X[i,3]+a[3]*X[i,5]) #c(-6,0.02,-0.04)
+        logit(pl[i])<- b[1]+b[2]*X[i,3]+b[3]*X[i,5]
         }
         
     N[1]<- sum(Z[,1])   
