@@ -1,21 +1,15 @@
-
-#######################################################################
-#
-#  LOAD SCRIPTS
-#
-#######################################################################
 library(RODBC)
 source("_R/1_global.R")
 source("_R/2_functions.R")
 run<-FALSE # SET TO TRUE TO REQUERY NOXUBEE GAGE DATA
-source("_R/3_load-and-clean.R") #needs internet to pull gage data
+source("_R/3_load-and-clean-IPM-season.R") #needs internet to pull gage data
 source("_R/4_tables.R")
 source("_R/5_figures.R")
 
 
 
 
-load("_output/ipmdat.Rdata")
+load("_output/ipmdat-season.Rdata")
 source("_R/6_models-ipm-season.R")
 library(R2jags)
 
@@ -32,6 +26,8 @@ dat$Z_known=ipmdat$Z_known[,1:dat$nprim]
 dat$ncap=ipmdat$ncap[1:dat$nprim] 
 dat$noccs<-table(ipmdat$secid[ipmdat$secid<=dat$nprim])
 dat$occId<-unlist(sapply(dat$noccs,function(x) 1:x))
+dat$ncap<- ipmdat$ncap$phys[1:dat$nprim]#(ipmdat$ncap$phys+ipmdat$ncap$acou)-ipmdat$ncap$both
+#dat$known<- ipmdat$ncap$acou
 
 ini<-list()
 Z<-matrix(1,dat$M,dat$nprim)
@@ -59,11 +55,14 @@ tot<-proc.time()-ptm
 print(paste0(round(tot[3]/60,1)," minutes")) 
 #save(out,file="_output/ests-with-a-b.Rdata")
 
-plot(out$BUGSoutput$mean$N_lat[dat$tt],out$BUGSoutput$mean$N);abline(0,1)
+plot(c(out$BUGSoutput$mean$NNtest),out$BUGSoutput$mean$N);abline(0,1)
+cbind(ipmdat$ncap[1:dat$nprim,],
+    out$BUGSoutput$mean$N-out$BUGSoutput$mean$N_lat[tt])
+ 
  
 plot(out$BUGSoutput$mean$N_lat[tt],out$BUGSoutput$mean$N);abline(0,1)
 plot(out$BUGSoutput$mean$N_lat,type='l',ylim=c(0,150))
-points(dat$tt,out$BUGSoutput$mean$N,type='l',col="red");abline(v=tt)
+points(dat$tt,out$BUGSoutput$mean$N,type='l',col="red",lwd=3);abline(v=tt,lty=2)
  
 upr<-out$BUGSoutput$summary
 upr<-upr[grep("N_lat",rownames(upr)),c(1,2,3,7)]

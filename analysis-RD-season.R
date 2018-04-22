@@ -2,7 +2,7 @@ library(RODBC)
 source("_R/1_global.R")
 source("_R/2_functions.R")
 run<-FALSE # SET TO TRUE TO REQUERY NOXUBEE GAGE DATA
-source("_R/3_load-and-clean-RD-season.R") #needs internet to pull gage data
+source("_R/3_load-and-clean-ipm-season.R") #needs internet to pull gage data
 
 
 library(R2jags)

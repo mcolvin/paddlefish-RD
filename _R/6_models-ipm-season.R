@@ -18,7 +18,8 @@ mod<-function()
         logit(pl[i])<- b[1]+b[2]*X[i,3]+b[3]*X[i,5]
         }
         
-    N[1]<- sum(Z[,1])   
+    N[1]<- sum(Z[,1]) 
+    NNtest[1]<- ncap[1]/pcap[1]    
     for(ii in 2:nprim)
         {
         N[ii]<- sum(Z[,ii])  
@@ -31,17 +32,19 @@ mod<-function()
         {
         for(j in 1:nprim)
             {
-            ip[i,j]<-omega[j]#*(1-Z_known[i,j])+Z_known[i,j]# INCLUSION PROBABILITY OMEGA OR 1, 1 = ACOUSTIC
+            ip[i,j]<-omega[j]*(1-Z_known[i,j])+Z_known[i,j]# INCLUSION PROBABILITY OMEGA OR 1, 1 = ACOUSTIC
             Z[i,j]~dbern(ip[i,j])            
             }
         for(k in 1:nocc)
             {
             ch[i,k]~dbern(Z[i,secid[k]]*p[secid[k],occId[k]])
             }
-        }    
+        }
+
+        
         
     # PRIORS
-    N1[1]~dunif(10,155)
+    N1[1]~dunif(1,155)
     N_lat[1]<-round(N1[1])   
     for(i in 1:nprim)
         {
