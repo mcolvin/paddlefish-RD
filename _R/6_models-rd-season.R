@@ -12,18 +12,21 @@ mod<-function()
             ch[ind,t_]~dbern(pp[ind,t_])
             }
         Z[1,ind]~dcat(tmat[1,1:3,1])        # INITIAL STATES
+        tmp[1,1,ind]<-1
+        tmp[1,2,ind]<-1
+        tmp[1,3,ind]<-1
         for(dd in 2:D)
             {
             Z[dd,ind]~dcat(tmp[dd,1:3,ind])                       
-            tmp[dd,1,ind]<-equals(Z[dd,ind],1)*tmat[dd,1,1]+
-                equals(Z[dd,ind],2)*tmat[dd,1,2]+
-                equals(Z[dd,ind],3)*tmat[dd,1,3]
-            tmp[dd,2,ind]<-equals(Z[dd,ind],1)*tmat[dd,2,1]+
-                equals(Z[dd,ind],2)*tmat[dd,2,2]+
-                equals(Z[dd,ind],3)*tmat[dd,2,3]                
+            tmp[dd,1,ind]<-equals(Z[dd-1,ind],1)*tmat[dd,1,1]+
+                equals(Z[dd-1,ind],2)*tmat[dd,1,2]+
+                equals(Z[dd-1,ind],3)*tmat[dd,1,3]
+            tmp[dd,2,ind]<-equals(Z[dd-1,ind],1)*tmat[dd,2,1]+
+                equals(Z[dd-1,ind],2)*tmat[dd,2,2]+
+                equals(Z[dd-1,ind],3)*tmat[dd,2,3]                
             tmp[dd,3,ind]<-equals(Z[dd,ind],1)*tmat[dd,3,1]+
-                equals(Z[dd,ind],2)*tmat[dd,3,2]+
-                equals(Z[dd,ind],3)*tmat[dd,3,3] 
+                equals(Z[dd-1,ind],2)*tmat[dd,3,2]+
+                equals(Z[dd-1,ind],3)*tmat[dd,3,3] 
             }
     
         }
