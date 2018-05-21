@@ -13,7 +13,7 @@ mod<-function()
     for(i in 2:D)
         {
         N_lat[i]~dpois(mu1[i]);T(0,160)## MAKE SURE THIS IS LARGER THAN THE PRIOR!
-        mu1[i]<-N_lat[i-1]+(r[i]+ pl[i]*N_lat[i-1])
+        mu1[i]<-(N_lat[i-1])+(r[i]+ pl[i]*N_lat[i-1])
         r[i]<- exp(a[1]+a[2]*X[i,3]+a[3]*X[i,5]) #c(-6,0.02,-0.04)
         logit(pl[i])<- b[1]+b[2]*X[i,3]+b[3]*X[i,5]
         }
@@ -24,7 +24,7 @@ mod<-function()
         {
         N[ii]<- sum(Z[,ii])  
         pcap[ii]<- 1-exp(sum(log_p0[ii,1:noccs[ii]])) #PROBABILIYT OF CAPTURE
-        ncap[ii]~dbin(pcap[ii],N_lat[tt[ii]])        
+        ncap[ii]~dbin(pcap[ii],N_lat[ii])        
         NNtest[ii]<- ncap[ii]/pcap[ii]        
         }    
     # ESTIMATE ABUNDANCE FROM CMR
@@ -32,8 +32,8 @@ mod<-function()
         {
         for(j in 1:nprim)
             {
-            ip[i,j]<-omega[j]*(1-Z_known[i,j])+Z_known[i,j]# INCLUSION PROBABILITY OMEGA OR 1, 1 = ACOUSTIC
-            Z[i,j]~dbern(ip[i,j])            
+            #ip[i,j]<-omega[j]#*(1-Z_known[i,j])+Z_known[i,j]# INCLUSION PROBABILITY OMEGA OR 1, 1 = ACOUSTIC
+            Z[i,j]~dbern(omega[j])            
             }
         for(k in 1:nocc)
             {
@@ -41,8 +41,14 @@ mod<-function()
             }
         }
 
-        
-        
+    for(i in 1:M)
+        {
+        for(k in 1:nocc)
+            {
+            cha[i,k]~dbern(Z_known[i,secid[k]]*p[secid[k],occId[k]])
+            }
+        }
+  
     # PRIORS
     N1[1]~dunif(1,155)
     N_lat[1]<-round(N1[1])   

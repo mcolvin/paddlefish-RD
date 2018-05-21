@@ -5,7 +5,7 @@
 
 
 # # http://warnercnr.colostate.edu/~gwhite/mark/markhelp/linkfunctions.htm
- # mlogit
+# mlogit
 # psi A to B = exp(B1)/[1 + exp(B1) + exp(B2) + exp(B3)]
 # psi A to C = exp(B2)/[1 + exp(B1) + exp(B2) + exp(B3)]
 # psi A to D = exp(B3)/[1 + exp(B1) + exp(B2) + exp(B3)]

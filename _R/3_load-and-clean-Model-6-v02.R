@@ -32,8 +32,6 @@ effort$year<-as.numeric(format(effort$date, "%Y"))
 effort$date<-as.Date(effort$date)
 ## FORMATTING INDICES
 effort<- effort[order(effort$date, effort$set_number),]
-#effort$sample<- paste(effort$year,effort$doy
-
 effort <- transform(effort,occasionId=as.numeric(factor(date)))
 effort$secid<-as.factor(c(1:nrow(effort)))## SECONDARY OCCASION ID
 effort$dayId<- as.integer(effort$date-min(effort$date))+1L
@@ -69,14 +67,26 @@ tag<-dcast(tag,pit~acoustic,value.var="n",length)
 tag<-tag[,c(1,3)]
 names(tag)[2]<-"type"
 tag$type<-ifelse(tag$type==0,"p",'a')
+
+
 ## SET UP CAPTURE HISTORY FOR ALL FISH
 ch<-reshape2::dcast(tmp,pit~secid,value.var="tmp",sum,
     drop=FALSE)
-## CAPTURE HISTORY FOR PIT TAG ONLY FIHS
+## CAPTURE HISTORY FOR PIT TAG ONLY FISH
 ch_p<-subset(ch,pit%in% tag$pit[tag$type=="p"])    
 ## CAPTURE HISTORY FOR ACOUSTIC TAG FISH
 ch_a<-subset(ch,pit%in% tag$pit[tag$type=="a"])    
 ch_a<-ch_a[match(acoustics$pit,ch_a$pit),]  
+
+#ch_p<-array(0,180,max(effort$set_number),dat$nprim)
+#
+#pp<-reshape2::dcast(tmp,occasionId+date+set_number+pit~"n",value.var="tmp",sum)
+#pp$n<-ifelse(pp$n>1,1,pp$n) ## fix fish with replicate meassurements
+
+#for(i in 1:nrow(pp))
+#    {
+#    
+#    }
 
 #######################################################################
 #
@@ -137,10 +147,12 @@ state_matrix["2018-01-25","A69-1303-11545"]<-3 #8
 ## ASSIGN VALUES PRE IMPLANTATION AS -99
 for(i in 1:nrow(meta))
     {
-    state_matrix[dates<meta[i,]$Implantation,i]<- NA ## CENSOR PRE TAGGING
+    state_matrix[dates<=meta[i,]$Implantation,i]<- NA ## CENSOR PRE TAGGING
     state_matrix[dates>meta[i,]$Failure_date,i]<- NA ## CENSOR POST TAG FAILURE
     }    
 
+
+    
 # 1=in pool pr(capture)=?
 # 2=outside pool pr(capture)=0
 
@@ -169,9 +181,133 @@ state_matrix<- state_matrix[,indx]
 indx<- match(ac_meta$pit,ch_a$pit)
 ch_a<-ch_a[indx,]
 
+## MATRIX OF 0 OR 1; 1 IF KNOWN FOR SURE TO BE IN POOL
+Z_known_p<-ch_p[,-1]
+Z_known_p[Z_known_p>0]<-0
+Z_known_p<-Z_known_p[,1:58]
+colnames(Z_known_p)<-NULL
+tt<-sort(unique(effort$date-(min(effort$date)-1)))
+Z_known_a<-t(state_matrix[ipmdat$tt,])
+Z_known_a[is.na(Z_known_a)]<-0
+Z_known_a[Z_known_a==2]<-0
+Z_known_a[Z_known_a==3]<-1
+colnames(Z_known_a)<-NULL
+rownames(Z_known_a)<-NULL
 
 
 
+
+#######################################################################
+#
+#  BUNDLE UP DATA FOR JAGS
+#
+#######################################################################
+
+ 
+ 
+dat<-list() 
+
+## SCALAR; NUMBER OF DAYS
+dat$D<-as.integer(max(effort$date)-(min(effort$date)))+1L
+## VECTOR; DAY OF SAMPLING
+dat$int_str<-sort(unique(effort$date-(min(effort$date)-1)))
+## VECTOR; DAY BEFORE NEXT SAMPLING
+dat$int_end<-dat$int_str[-1]-1
+## SCALAR; NUMBER OF PRIMARY OCCASIONS
+dat$nprim<-max(effort$occasionId)
+## MATRIX; CAPTURE HISTORIES, IND FISH
+dat$ch_a<-ch_a[,-1]
+dat$ch_a[dat$ch_a>1]<-1 ## some fish have replicate length/weight data
+dat$ch_p<-ch_p[,-1]
+dat$ch_p[dat$ch_p>1]<-1 ##
+
+dat$secid<-effort$occasionId
+dat$dayid<-effort$dayId    ## DAYS EACH SECONDARY OCCASION OCCURRED ON.
+dat$occId<- effort$set_number
+## SCALAR; NUMBER OF TAGGED FISH
+dat$M_a<-nrow(dat$ch_a)
+dat$M_p<-nrow(dat$ch_p)
+## SCALAR; NUMBER OF SECONDARY OCCASIONS
+dat$nocc<-ncol(dat$ch_p)    
+## MATRIX; DAILY COVARIATE
+#dat$X<-X
+
+## MATRIX; ACOUSTIC TAGS
+
+dat$tag_state<-state_matrix 
+dat$obs_state<-state_matrix 
+dat$obs_state[dat$obs_state==3]<-1 
+dat$obs_state[dat$obs_state==2]<-0 
+dat$obs_state[is.na(dat$obs_state)]<-0 
+
+dat$obs_state_p<- dat$obs_state
+dat$obs_state_p[is.na(dat$obs_state_p)]<- 0
+
+dat$ac_meta<-ac_meta[,-1]
+dat$N_ac<- ncol(state_matrix)
+
+
+
+## BREAK OUT PIT AND ACOUSTIC
+tmp<-lapply(1:dat$nprim,function(x)
+    {
+    ## MAKE CAPTURE HISTORIES FOR PIT TAGGED FISH AND FAILED RECIEVER
+    tmppp<- ch_p[,-1]
+    tmppp<- tmppp[,which(dat$secid==x)]
+    tmppp_app<-ch_a[,-1]
+    tmppp_app<-tmppp_app[,which(dat$secid==x)] ## acoustic tag fish, either not tagged yet or tag failed
+    tmppp<- rbind(tmppp[which(rowSums(tmppp)>0),],
+        tmppp_app[which(Z_known_a[,x]==0& rowSums(tmppp_app)>0) ,])
+    n=nrow(tmppp)
+    nocc<- ncol(tmppp)    
+    a<-matrix(0,175,12)  #  
+    na=nrow(tmppp)
+    nocc<- ncol(tmppp)
+    if(n>0)
+        {
+        a[1:na,1:nocc]<-as.matrix(tmppp[1:na,1:nocc])
+        }
+
+    
+    ## ACOUSTICALLY TAGGED FISH THAT WERE AVAILIBLE FOR CAPTURE
+    tmppp<- ch_a[,-1]
+    tmppp<- ch_a[,which(dat$secid==x)]
+    tmppp<-tmppp[which(Z_known_a[,x]==1),]
+    b<-matrix(0,58,12)
+    p<-rep(0,58)
+    nb=nrow(tmppp)
+    if(nb>0)
+        {
+        b[1:nb,1:nocc]<-as.matrix(tmppp[1:nb,1:nocc])
+        p[1:nb]<-1
+        }
+    return(list(a=a,na=na, b=b,nb=nb,p=p,nocc=nocc))
+    })
+
+    
+a<-array(0,c(175,12,58))
+b<-array(0,c(58,12,58))
+nocc<-nb<-rep(0,58)
+
+for(i in 1:dat$nprim)
+    {
+    a[,,i]<- as.matrix(tmp[[i]]$a)
+    b[,,i]<- as.matrix(tmp[[i]]$b)
+    nb[i]<-tmp[[i]]$nb
+    nocc[i]<-tmp[[i]]$nocc
+    }
+dat<-list()
+dat$nprime<- max(effort$occasionId)
+a[a>1]<-1
+dat$a<-a
+b[b>1]<-1
+dat$b<-b
+dat$nb<- nb
+dat$na<- 175
+dat$nocc<- nocc
+## SCALAR; NUMBER OF DAYS
+dat$D<-as.integer(max(effort$date)-(min(effort$date)))+1L
+dat$tt<-tt
   
 #######################################################################
 #
@@ -249,85 +385,10 @@ alldat2<- merge(noxDaily, alldat,by="day",all.x=TRUE)
 X<- alldat2[,match(c("day","Q","gage","Oktocstage","TempC.y"),names(alldat2))]
 X<- X[order(X$day),]
 
+dat$X<-X
+dat$X[,2]<-scale(dat$X[,2],center=mean(dat$X[,2]),scale=sd(dat$X[,2]))
+dat$X[,3]<-scale(dat$X[,3],center=mean(dat$X[,3]),scale=sd(dat$X[,3]))
+dat$X[,4]<-1#scale(dat$X[,4],center=mean(dat$X[,4]),scale=sd(dat$X[,4]))
+dat$X[,5]<-scale(dat$X[,5],center=mean(dat$X[,5]),scale=sd(dat$X[,5]))
 
 
-#######################################################################
-#
-#  BUNDLE UP DATA FOR JAGS
-#
-#######################################################################
-
-## DATA FORMATTED FOR IMP
-ipmdat<-list()
-### SCALAR; NUMBER OF DAYS
-ipmdat$D<-as.integer(max(effort$date)-(min(effort$date)))+1L
-### VECTOR; DAY OF SAMPLING
-ipmdat$tt<-sort(unique(effort$date-(min(effort$date)-1)))
-### CAPTURE HISTORY FOR PIT AND ACOUSTIC
-chipm<-rbind(ch_p[,-1],ch_a[,-1])
-ipmdat$ch<-as.matrix(chipm)
-ipmdat$ch[ipmdat$ch>1]<-1 ## multiple lengths
-colnames(ipmdat$ch)<-NULL
-ipmdat$ch<- rbind(ipmdat$ch,matrix(0,20,ncol(ipmdat$ch))) ## AUGMENT BY 20 ROWS
-ipmdat$M<-nrow(ipmdat$ch)
-ipmdat$secid<-effort$occasionId
-ipmdat$dayid<-effort$dayId    ## DAYS EACH SECONDARY OCCASION OCCURRED ON.
-ipmdat$nprim<-length(ipmdat$tt)
-ipmdat$nocc<-length(effort$occasionId)
-
-## MATRIX OF 0 OR 1; 1 IF KNOWN FOR SURE TO BE IN POOL
-Z_known_p<-ch_p[,-1]
-Z_known_p[Z_known_p>0]<-0
-Z_known_p<-Z_known_p[,1:58]
-colnames(Z_known_p)<-NULL
-Z_known_a<-t(state_matrix[ipmdat$tt,])
-Z_known_a[is.na(Z_known_a)]<-0
-Z_known_a[Z_known_a==2]<-0
-Z_known_a[Z_known_a==3]<-1
-colnames(Z_known_a)<-NULL
-rownames(Z_known_a)<-NULL
-ipmdat$Z_known<- rbind(as.matrix(Z_known_p),as.matrix(Z_known_a))
-ipmdat$Z_known<- rbind(ipmdat$Z_known,matrix(0,20,ncol(ipmdat$Z_known)))
-
-## known fish
-ipmdat$known<-t(state_matrix)
-ipmdat$known[is.na(Z_known_a)]<-0
-ipmdat$known[Z_known_a==2]<-0
-ipmdat$known[Z_known_a==3]<-1
-ipmdat$known<-colSums(ipmdat$known,na.rm=TRUE)
-## MATRIX; DAILY COVARIATE
-ipmdat$X<-X
-ipmdat$X[,2]<-scale(ipmdat$X[,2],center=mean(ipmdat$X[,2]),scale=sd(ipmdat$X[,2]))
-ipmdat$X[,3]<-scale(ipmdat$X[,3],center=mean(ipmdat$X[,3]),scale=sd(ipmdat$X[,3]))
-ipmdat$X[,4]<-scale(ipmdat$X[,4],center=mean(ipmdat$X[,4]),scale=sd(ipmdat$X[,4]))
-ipmdat$X[,5]<-scale(ipmdat$X[,5],center=mean(ipmdat$X[,5]),scale=sd(ipmdat$X[,5]))
-
-
-ipmdat$ncap<- lapply(1:ipmdat$nprim,function(x)
-    {
-    phys<-sum(apply(ipmdat$ch[,which(ipmdat$secid==x)],1,max))
-    acou<- sum(ipmdat$Z_known[,x])
-    both<- length(which(rowSums(cbind(apply(ipmdat$ch[,which(ipmdat$secid==x)],1,max),
-        ipmdat$Z_known[,x]))==2))
-    
-    return(data.frame(phys=phys,acou=acou,both=both))
-    })
-ipmdat$ncap<-do.call("rbind",ipmdat$ncap)
-#ipmdat$ncap<- (ipmdat$ncap$phys+ipmdat$ncap$acou)-ipmdat$ncap$both  
-
- 
- 
-ipmdat$cha<-ipmdat$ch
-ipmdat$cha[]<-0
-for(i in 1:nrow(ipmdat$ch))
-    {
-    for(p in 1:ipmdat$nocc)
-        {
-        ipmdat$cha[i,p]<- ifelse(ipmdat$Z_known[i,ipmdat$secid[p]]==1,ipmdat$ch[i,p],0)
-        ipmdat$ch[i,p]<- ifelse(ipmdat$Z_known[i,ipmdat$secid[p]]==1,0,ipmdat$ch[i,p])
-        }
-    }
-save(ipmdat,file="_output/ipmdat-season.Rdata")
- 
- 
- 

@@ -20,13 +20,15 @@ dat$nprim<-length(dat$tt)
 dat$secid<- ipmdat$secid[ipmdat$secid<=dat$nprim]
 dat$nocc<-length(dat$secid)
 dat$ch<- ipmdat$ch[,c(1:length(secid))]
+dat$cha<-ipmdat$cha[,c(1:length(secid))]
 dat$X<- ipmdat$X[ipmdat$X[,1]<=dat$D,]   
 dat$M=nrow(dat$ch)
 dat$Z_known=ipmdat$Z_known[,1:dat$nprim] 
-dat$ncap=ipmdat$ncap[1:dat$nprim] 
+#dat$ncap=ipmdat$ncap[1:dat$nprim] 
 dat$noccs<-table(ipmdat$secid[ipmdat$secid<=dat$nprim])
 dat$occId<-unlist(sapply(dat$noccs,function(x) 1:x))
-dat$ncap<- ipmdat$ncap$phys[1:dat$nprim]#(ipmdat$ncap$phys+ipmdat$ncap$acou)-ipmdat$ncap$both
+dat$ncap<- ipmdat$ncap$phys[1:dat$nprim]-ipmdat$ncap$both[1:dat$nprim]#(ipmdat$ncap$phys+ipmdat$ncap$acou)-ipmdat$ncap$both
+#dat$known<- ipmdat$known#ipmdat$ncap$acou
 #dat$known<- ipmdat$ncap$acou
 
 ini<-list()
