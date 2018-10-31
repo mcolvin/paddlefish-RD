@@ -9,8 +9,8 @@ mod<-function()
         {
         mu[i] <- max(0,min(175,estAdults[i-1]+(r[i]+ pl[i]*estAdults[i-1])))
         estAdults[i] ~ dpois(mu[i])        
-        r[i]<- exp(abeta[1]+abeta[2]*X[i,3])
-        logit(pl[i])<- bbeta[1]+bbeta[2]*X[i,3]
+        r[i]<- exp(abeta[1]+abeta[2]*X[i,2]+abeta[3]*X[i,3])
+        logit(pl[i])<- bbeta[1]+bbeta[2]*X[i,2]++bbeta[3]*X[i,3]
         }
 
     for(ii in 1:nprime)
@@ -57,7 +57,7 @@ mod<-function()
             }
         Pcap[i]<- 1-prod(p0[i,1:nocc[i]])
         }
-    for(iii in 1:2)
+    for(iii in 1:3)
         {
         abeta[iii]~dnorm(0, 0.0001)
         bbeta[iii]~dnorm(0,0.37)

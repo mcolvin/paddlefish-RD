@@ -143,7 +143,12 @@ state_matrix["2018-01-15","A69-1303-11547"]<-3 #6
 state_matrix["2018-01-25","A69-1303-11531"]<-3 #7
 state_matrix["2018-01-25","A69-1303-11545"]<-3 #8
 
-  
+state_matrix[,"A69-1303-11412"]
+A69-9001-20200
+apply(state_matrix,1,sum,na.rm=TRUE)
+ table(is.na(state_matrix[785,] )
+ state_matrix[785,]
+ 
 ## ASSIGN VALUES PRE IMPLANTATION AS -99
 for(i in 1:nrow(meta))
     {
@@ -187,7 +192,7 @@ Z_known_p[Z_known_p>0]<-0
 Z_known_p<-Z_known_p[,1:58]
 colnames(Z_known_p)<-NULL
 tt<-sort(unique(effort$date-(min(effort$date)-1)))
-Z_known_a<-t(state_matrix[ipmdat$tt,])
+Z_known_a<-t(state_matrix[tt,])
 Z_known_a[is.na(Z_known_a)]<-0
 Z_known_a[Z_known_a==2]<-0
 Z_known_a[Z_known_a==3]<-1
